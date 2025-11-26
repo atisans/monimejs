@@ -79,4 +79,39 @@ export class PaymentCode {
       */
     }
   }
+
+  async getPaymentCode(id: string) {
+    const options = {
+      method: "GET",
+      headers: {
+        // "Idempotency-Key": crypto.randomUUID(),
+        "Monime-Space-Id": this.config.spaceId,
+        // "Monime-Version": "caph.2025-08-23",
+        Authorization: `Bearer ${this.config.accessToken}`,
+        "Content-Type": "application/json",
+      },
+    };
+    try {
+      const res = await fetch(`${this.endpoint}/${id}`, options);
+      const data = await res.json();
+
+      return data as {
+        success: true;
+        messages: [];
+        result: PaymentCodeOptions;
+      };
+    } catch (_e) {
+      console.log(_e);
+      // @ts-expect-error
+      return { success: false, messages: [_e.message], result: null };
+      /*
+        error: {
+          code: 400,
+          reason: 'arguments_invalid',
+          message: 'Phone number must be between 6 and 16 characters (inclusive)',
+          details: []
+        }
+      */
+    }
+  }
 }
