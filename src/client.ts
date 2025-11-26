@@ -1,19 +1,19 @@
+import { PaymentCode } from "./payment-code";
 import type { ClientOptions } from "./types";
 
 export class MonimeClient {
-  private spaceId: string;
-  private accessToken: string;
+  private space_id: string;
+  private access_token: string;
+
+  paymentCode: PaymentCode;
 
   constructor(options: ClientOptions) {
-    this.accessToken = options.accessToken;
-    this.spaceId = options.spaceId;
-  }
+    this.access_token = options.accessToken;
+    this.space_id = options.spaceId;
 
-  /** @internal */
-  _get_client_config() {
-    return {
-      spaceId: this.spaceId,
-      accessToken: this.accessToken,
-    };
+    this.paymentCode = new PaymentCode({
+      accessToken: this.access_token,
+      spaceId: this.space_id,
+    });
   }
 }
