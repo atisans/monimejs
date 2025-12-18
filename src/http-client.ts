@@ -8,20 +8,21 @@ import type { ClientOptions, RequestConfig } from "./types";
 import { validateClientOptions } from "./validation";
 
 /** API version prefix for all endpoints */
-export const API_VERSION = "v1";
+const API_VERSION = "v1";
 
-export type HttpMethod = "GET" | "POST" | "PATCH" | "DELETE";
+type HttpMethod = "GET" | "POST" | "PATCH" | "DELETE";
 
-export type RequestOptions = {
+type RequestOptions = {
   method: HttpMethod;
   path: string;
   body?: unknown;
-  params?: Record<string, string | number | undefined> | undefined;
-  idempotencyKey?: string | undefined;
+  params?: Record<string, string | number | boolean | undefined> | undefined;
   config?: RequestConfig | undefined;
 };
 
-export type ApiErrorResponse = {
+type ApiErrorResponse = {
+  success: false;
+  messages: string[];
   error: {
     code: number;
     reason: string;
@@ -42,14 +43,14 @@ const DEFAULT_BASE_URL = "https://api.monime.io";
  * Handles authentication, retries, timeouts, and error handling.
  */
 export class MonimeHttpClient {
-  private _base_url: string;
-  private _space_id: string;
-  private _access_token: string;
-  private _timeout: number;
-  private _retries: number;
-  private _retry_delay: number;
-  private _retry_backoff: number;
-  private _validate_inputs: boolean;
+  private base_url: string;
+  private space_id: string;
+  private access_token: string;
+  private timeout: number;
+  private retries: number;
+  private retry_delay: number;
+  private retry_backoff: number;
+  private validate_inputs: boolean;
 
   constructor(options: ClientOptions) {
     // Validate HTTPS requirement for custom base URLs
@@ -57,11 +58,13 @@ export class MonimeHttpClient {
       options.baseUrl !== undefined &&
       !options.baseUrl.startsWith("https://")
     ) {
-      throw new MonimeValidationError(
-        "baseUrl must use HTTPS for security",
-        "baseUrl",
-        options.baseUrl,
-      );
+      throw new MonimeValidationError("baseUrl must use HTTPS for security", [
+        {
+          message: "baseUrl must use HTTPS for security",
+          field: "baseUrl",
+          value: options.baseUrl,
+        },
+      ]);
     }
 
     // Validate options if enabled (default: true)
@@ -69,21 +72,21 @@ export class MonimeHttpClient {
       validateClientOptions(options);
     }
 
-    this._base_url = options.baseUrl ?? DEFAULT_BASE_URL;
-    this._space_id = options.spaceId;
-    this._access_token = options.accessToken;
-    this._timeout = options.timeout ?? DEFAULT_TIMEOUT;
-    this._retries = options.retries ?? DEFAULT_RETRIES;
-    this._retry_delay = options.retryDelay ?? DEFAULT_RETRY_DELAY;
-    this._retry_backoff = options.retryBackoff ?? DEFAULT_RETRY_BACKOFF;
-    this._validate_inputs = options.validateInputs ?? true;
+    this.base_url = options.baseUrl ?? DEFAULT_BASE_URL;
+    this.space_id = options.spaceId;
+    this.access_token = options.accessToken;
+    this.timeout = options.timeout ?? DEFAULT_TIMEOUT;
+    this.retries = options.retries ?? DEFAULT_RETRIES;
+    this.retry_delay = options.retryDelay ?? DEFAULT_RETRY_DELAY;
+    this.retry_backoff = options.retryBackoff ?? DEFAULT_RETRY_BACKOFF;
+    this.validate_inputs = options.validateInputs ?? true;
   }
 
   /**
    * Whether input validation is enabled
    */
   get shouldValidate(): boolean {
-    return this._validate_inputs;
+    return this.validate_inputs;
   }
 
   /**
@@ -96,18 +99,19 @@ export class MonimeHttpClient {
    * @throws {MonimeValidationError} When input validation fails
    */
   async request<T>(options: RequestOptions): Promise<T> {
-    const { method, path, body, params, idempotencyKey, config } = options;
+    const { method, path, body, params, config } = options;
 
     // Merge config with defaults (per-request overrides client defaults)
-    const timeout = config?.timeout ?? this._timeout;
-    const max_retries = config?.retries ?? this._retries;
+    const timeout = config?.timeout ?? this.timeout;
+    const max_retries = config?.retries ?? this.retries;
     const external_signal = config?.signal;
+    const idempotency_key = config?.idempotencyKey;
 
     // Build URL with query params
-    const url = this._build_url(path, params);
+    const url = this.build_url(path, params);
 
     // Build headers
-    const headers = this._build_headers(method, body, idempotencyKey);
+    const headers = this.build_headers(method, body, idempotency_key);
 
     // Build fetch options
     const fetch_options: RequestInit = {
@@ -120,7 +124,7 @@ export class MonimeHttpClient {
     }
 
     // Execute request with retry logic
-    return this._execute_with_retry<T>(
+    return this.execute_with_retry<T>(
       url,
       fetch_options,
       timeout,
@@ -129,11 +133,11 @@ export class MonimeHttpClient {
     );
   }
 
-  private _build_url(
+  private build_url(
     path: string,
-    params?: Record<string, string | number | undefined>,
+    params?: Record<string, string | number | boolean | undefined>,
   ): string {
-    let url = `${this._base_url}${path}`;
+    let url = `${this.base_url}/${API_VERSION}${path}`;
 
     if (params) {
       const search_params = new URLSearchParams();
@@ -151,14 +155,14 @@ export class MonimeHttpClient {
     return url;
   }
 
-  private _build_headers(
+  private build_headers(
     method: HttpMethod,
     body?: unknown,
     idempotency_key?: string,
   ): Record<string, string> {
     const headers: Record<string, string> = {
-      "Monime-Space-Id": this._space_id,
-      Authorization: `Bearer ${this._access_token}`,
+      "Monime-Space-Id": this.space_id,
+      Authorization: `Bearer ${this.access_token}`,
     };
 
     // Only set Content-Type for requests with body
@@ -174,7 +178,7 @@ export class MonimeHttpClient {
     return headers;
   }
 
-  private async _execute_with_retry<T>(
+  private async execute_with_retry<T>(
     url: string,
     fetch_options: RequestInit,
     timeout: number,
@@ -182,11 +186,17 @@ export class MonimeHttpClient {
     external_signal?: AbortSignal,
   ): Promise<T> {
     let last_error: Error | undefined;
-    let attempt = 0;
 
-    while (attempt <= max_retries) {
+    // Total attempts = 1 initial + max_retries
+    const total_attempts = 1 + max_retries;
+
+    for (
+      let attempt_number = 1;
+      attempt_number <= total_attempts;
+      attempt_number++
+    ) {
       try {
-        return await this._execute_request<T>(
+        return await this.execute_request<T>(
           url,
           fetch_options,
           timeout,
@@ -206,24 +216,28 @@ export class MonimeHttpClient {
         }
 
         // Check if error is retryable
-        const is_retryable = this._is_retryable_error(last_error);
-        if (!is_retryable || attempt >= max_retries) {
+        const is_retryable = this.is_retryable_error(last_error);
+        const is_last_attempt = attempt_number === total_attempts;
+
+        if (!is_retryable || is_last_attempt) {
           throw last_error;
         }
 
-        // Calculate delay with exponential backoff and jitter
-        const delay = this._calculate_retry_delay(attempt, last_error);
-        await this._sleep(delay);
+        // Calculate delay for next attempt
+        // attempt_number=1 failed, so this will be retry #1 (index 0 for backoff calculation)
+        const retry_index = attempt_number - 1;
+        const delay = this.calculate_retry_delay(retry_index, last_error);
+        await this.sleep(delay);
 
-        attempt++;
+        // Continue to next attempt
       }
     }
 
     // Should never reach here, but TypeScript needs this
-    throw last_error ?? new Error("Unknown error");
+    throw last_error ?? new Error("Unknown error during retry");
   }
 
-  private async _execute_request<T>(
+  private async execute_request<T>(
     url: string,
     fetch_options: RequestInit,
     timeout: number,
@@ -270,7 +284,7 @@ export class MonimeHttpClient {
 
       // Check for HTTP errors
       if (!res.ok) {
-        const retry_after = this._parse_retry_after(res.headers);
+        const retry_after = this.parse_retry_after(res.headers);
         const error_response = data as ApiErrorResponse;
 
         if (error_response.error) {
@@ -329,7 +343,7 @@ export class MonimeHttpClient {
    * Parse Retry-After header value to milliseconds
    * Supports both seconds format (e.g., "120") and HTTP-date format
    */
-  private _parse_retry_after(headers: Headers): number | undefined {
+  private parse_retry_after(headers: Headers): number | undefined {
     const retry_after = headers.get("Retry-After");
     if (!retry_after) return undefined;
 
@@ -349,7 +363,7 @@ export class MonimeHttpClient {
     return undefined;
   }
 
-  private _is_retryable_error(error: Error): boolean {
+  private is_retryable_error(error: Error): boolean {
     // Network errors are retryable
     if (error instanceof MonimeNetworkError) {
       return true;
@@ -368,20 +382,21 @@ export class MonimeHttpClient {
     return false;
   }
 
-  private _calculate_retry_delay(attempt: number, error: Error): number {
+  private calculate_retry_delay(retry_index: number, error: Error): number {
     // Use Retry-After header value if available (for 429 responses)
     if (error instanceof MonimeApiError && error.retryAfter !== undefined) {
       return error.retryAfter;
     }
 
-    // Exponential backoff with jitter
-    const base_delay = this._retry_delay * this._retry_backoff ** attempt;
+    // Exponential backoff: delay = initial_delay * (backoff ^ retry_index)
+    // retry_index 0: 1000ms, retry_index 1: 2000ms, retry_index 2: 4000ms, etc.
+    const base_delay = this.retry_delay * this.retry_backoff ** retry_index;
     const jitter = Math.random() * 500; // 0-500ms random jitter
 
     return base_delay + jitter;
   }
 
-  private _sleep(ms: number): Promise<void> {
+  private sleep(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }

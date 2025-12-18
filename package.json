@@ -26,8 +26,8 @@
     "format": "biome check --write .",
     "format:check": "biome check .",
     "build": "npm run build:js && npm run build:types",
-    "build:js": "esbuild src/index.ts --bundle --format=esm --outdir=dist --target=node20 --minify --tree-shaking=true --external:valibot",
-    "build:types": "tsc --emitDeclarationOnly",
+    "build:js": "esbuild src/index.ts --bundle --format=esm --outfile=dist/index.js --target=node20 --minify --tree-shaking=true --external:valibot",
+    "build:types": "dts-bundle-generator -o dist/index.d.ts src/index.ts --no-banner",
     "build:clean": "rm -rf dist && npm run build",
     "prepublishOnly": "npm run build:clean",
     "changeset": "changeset",
@@ -70,6 +70,7 @@
     "@changesets/changelog-github": "^0.5.1",
     "@changesets/cli": "^2.29.7",
     "@types/node": "^24.10.1",
+    "dts-bundle-generator": "^9.5.1",
     "esbuild": "^0.27.0",
     "typescript": "^5.9.3"
   },

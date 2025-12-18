@@ -1,4 +1,4 @@
-import { API_VERSION, type MonimeHttpClient } from "./http-client";
+import type { MonimeHttpClient } from "./http-client";
 import type {
   ApiListResponse,
   ApiResponse,
@@ -9,45 +9,58 @@ import type {
 } from "./types";
 import {
   validateLimit,
-  validatePaymentId,
+  validateId,
   validateUpdatePaymentInput,
 } from "./validation";
 
 /**
  * Module for managing payments.
- * Payments are created when a customer completes a payment code transaction.
+ *
+ * Payments represent completed payment transactions from customers. This module
+ * provides read-only access to view and query payment records. Payments are
+ * automatically created when customers complete transactions via payment codes,
+ * checkout sessions, or other payment channels.
+ *
+ * Features:
+ * - View payment details and status
+ * - Track payment sources (payment code, checkout session)
+ * - Filter by order number or financial account
+ * - Access transaction references for accounting
+ * - Update metadata for record keeping
+ *
+ * @see {@link https://docs.monime.io/apis/payments} Payments API Documentation
  */
 export class PaymentModule {
-  private _http_client: MonimeHttpClient;
+  private http_client: MonimeHttpClient;
 
-  constructor(httpClient: MonimeHttpClient) {
-    this._http_client = httpClient;
+  constructor(http_client: MonimeHttpClient) {
+    this.http_client = http_client;
   }
 
   /**
    * Retrieves a payment by ID.
-   * @param id - The payment ID (must start with "pay-")
-   * @param config - Per-request configuration overrides
+   * @param id - The payment ID
+   * @param config - Optional request configuration
    * @returns The payment
    * @throws {MonimeValidationError} If ID validation fails
    * @throws {MonimeApiError} If the API returns an error
    */
   async get(id: string, config?: RequestConfig): Promise<ApiResponse<Payment>> {
-    if (this._http_client.shouldValidate) {
-      validatePaymentId(id);
+    if (this.http_client.shouldValidate) {
+      validateId(id);
     }
 
-    return this._http_client.request<ApiResponse<Payment>>({
+    return this.http_client.request<ApiResponse<Payment>>({
       method: "GET",
-      path: `/${API_VERSION}/payments/${encodeURIComponent(id)}`,
+      path: `/payments/${encodeURIComponent(id)}`,
       config,
     });
   }
 
   /**
-   * Lists payments with optional filtering.
+   * Lists payments with optional filtering and pagination.
    * @param params - Optional filter and pagination parameters
-   * @param config - Per-request configuration overrides
+   * @param config - Optional request configuration
    * @returns A paginated list of payments
    * @throws {MonimeValidationError} If params validation fails
    * @throws {MonimeApiError} If the API returns an error
@@ -56,7 +69,7 @@ export class PaymentModule {
     params?: ListPaymentsParams,
     config?: RequestConfig,
   ): Promise<ApiListResponse<Payment>> {
-    if (this._http_client.shouldValidate && params?.limit !== undefined) {
+    if (this.http_client.shouldValidate && params?.limit !== undefined) {
       validateLimit(params.limit);
     }
 
@@ -70,9 +83,9 @@ export class PaymentModule {
         }
       : undefined;
 
-    return this._http_client.request<ApiListResponse<Payment>>({
+    return this.http_client.request<ApiListResponse<Payment>>({
       method: "GET",
-      path: `/${API_VERSION}/payments`,
+      path: "/payments",
       params: query_params,
       config,
     });
@@ -80,9 +93,9 @@ export class PaymentModule {
 
   /**
    * Updates a payment.
-   * @param id - The payment ID (must start with "pay-")
-   * @param input - Fields to update (null values will clear the field)
-   * @param config - Per-request configuration overrides
+   * @param id - The payment ID
+   * @param input - Fields to update
+   * @param config - Optional request configuration
    * @returns The updated payment
    * @throws {MonimeValidationError} If validation fails
    * @throws {MonimeApiError} If the API returns an error
@@ -92,14 +105,14 @@ export class PaymentModule {
     input: UpdatePaymentInput,
     config?: RequestConfig,
   ): Promise<ApiResponse<Payment>> {
-    if (this._http_client.shouldValidate) {
-      validatePaymentId(id);
+    if (this.http_client.shouldValidate) {
+      validateId(id);
       validateUpdatePaymentInput(input);
     }
 
-    return this._http_client.request<ApiResponse<Payment>>({
+    return this.http_client.request<ApiResponse<Payment>>({
       method: "PATCH",
-      path: `/${API_VERSION}/payments/${encodeURIComponent(id)}`,
+      path: `/payments/${encodeURIComponent(id)}`,
       body: input,
       config,
     });

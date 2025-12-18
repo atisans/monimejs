@@ -1,9 +1,14 @@
+import { BankModule } from "./bank";
 import { CheckoutSessionModule } from "./checkout-session";
+import { FinancialAccountModule } from "./financial-account";
+import { FinancialTransactionModule } from "./financial-transaction";
 import { MonimeHttpClient } from "./http-client";
 import { InternalTransferModule } from "./internal-transfer";
+import { MomoModule } from "./momo";
 import { PaymentModule } from "./payment";
 import { PaymentCodeModule } from "./payment-code";
 import { PayoutModule } from "./payout";
+import { ReceiptModule } from "./receipt";
 import type { ClientOptions } from "./types";
 import { UssdOtpModule } from "./ussd-otp";
 import { WebhookModule } from "./webhook";
@@ -31,7 +36,16 @@ import { WebhookModule } from "./webhook";
  * ```
  */
 export class MonimeClient {
-  private _http_client: MonimeHttpClient;
+  private http_client: MonimeHttpClient;
+
+  /** Module for retrieving bank information (financial institution providers) */
+  bank: BankModule;
+
+  /** Module for managing financial accounts (wallets that hold and track money) */
+  financialAccount: FinancialAccountModule;
+
+  /** Module for managing financial transactions (fund movements affecting accounts) */
+  financialTransaction: FinancialTransactionModule;
 
   /** Module for managing payment codes (USSD payment links) */
   paymentCode: PaymentCodeModule;
@@ -50,6 +64,12 @@ export class MonimeClient {
 
   /** Module for managing internal transfers (between financial accounts) */
   internalTransfer: InternalTransferModule;
+
+  /** Module for retrieving mobile money provider information */
+  momo: MomoModule;
+
+  /** Module for managing receipts (proof of customer entitlements) */
+  receipt: ReceiptModule;
 
   /** Module for managing USSD OTP verification */
   ussdOtp: UssdOtpModule;
@@ -87,14 +107,21 @@ export class MonimeClient {
    * ```
    */
   constructor(options: ClientOptions) {
-    this._http_client = new MonimeHttpClient(options);
+    this.http_client = new MonimeHttpClient(options);
 
-    this.paymentCode = new PaymentCodeModule(this._http_client);
-    this.payment = new PaymentModule(this._http_client);
-    this.checkoutSession = new CheckoutSessionModule(this._http_client);
-    this.payout = new PayoutModule(this._http_client);
-    this.webhook = new WebhookModule(this._http_client);
-    this.internalTransfer = new InternalTransferModule(this._http_client);
-    this.ussdOtp = new UssdOtpModule(this._http_client);
+    this.bank = new BankModule(this.http_client);
+    this.financialAccount = new FinancialAccountModule(this.http_client);
+    this.financialTransaction = new FinancialTransactionModule(
+      this.http_client,
+    );
+    this.paymentCode = new PaymentCodeModule(this.http_client);
+    this.payment = new PaymentModule(this.http_client);
+    this.checkoutSession = new CheckoutSessionModule(this.http_client);
+    this.payout = new PayoutModule(this.http_client);
+    this.webhook = new WebhookModule(this.http_client);
+    this.internalTransfer = new InternalTransferModule(this.http_client);
+    this.momo = new MomoModule(this.http_client);
+    this.receipt = new ReceiptModule(this.http_client);
+    this.ussdOtp = new UssdOtpModule(this.http_client);
   }
 }
