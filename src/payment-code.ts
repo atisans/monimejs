@@ -1,4 +1,4 @@
-import { API_VERSION, type MonimeHttpClient } from "./http-client";
+import type { MonimeHttpClient } from "./http-client";
 import type {
   ApiDeleteResponse,
   ApiListResponse,
@@ -10,54 +10,64 @@ import type {
   UpdatePaymentCodeInput,
 } from "./types";
 import {
-  validateCreatePaymentCodeInput,
-  validateLimit,
-  validatePaymentCodeId,
-  validateUpdatePaymentCodeInput,
+  CreatePaymentCodeInputSchema,
+  IdSchema,
+  LimitSchema,
+  UpdatePaymentCodeInputSchema,
+  validate,
 } from "./validation";
 
 /**
  * Module for managing payment codes.
- * Payment codes are used to generate USSD codes for receiving payments.
+ *
+ * Payment codes are programmable, short-lived tokens that generate USSD dial strings
+ * for receiving mobile money payments. They support one-time payments (single use)
+ * and recurrent payments (multiple uses until a target is met).
+ *
+ * Features:
+ * - Generate USSD codes like *715*12345#
+ * - Restrict to specific mobile money providers (Orange, Africell, QCell)
+ * - Restrict to a single authorized phone number
+ * - Set expiration duration
+ * - Track payment completion status
+ *
+ * @see {@link https://docs.monime.io/apis/payment-codes} Payment Codes API Documentation
  */
 export class PaymentCodeModule {
-  private _http_client: MonimeHttpClient;
+  private http_client: MonimeHttpClient;
 
-  constructor(httpClient: MonimeHttpClient) {
-    this._http_client = httpClient;
+  constructor(http_client: MonimeHttpClient) {
+    this.http_client = http_client;
   }
 
   /**
    * Creates a new payment code.
    * @param input - Payment code configuration
-   * @param idempotencyKey - Optional key to prevent duplicate requests
-   * @param config - Per-request configuration overrides
+   * @param config - Optional request configuration (timeout, idempotencyKey, signal)
    * @returns The created payment code
    * @throws {MonimeValidationError} If input validation fails
    * @throws {MonimeApiError} If the API returns an error
    */
   async create(
     input: CreatePaymentCodeInput,
-    idempotencyKey?: string,
     config?: RequestConfig,
   ): Promise<ApiResponse<PaymentCode>> {
-    if (this._http_client.shouldValidate) {
-      validateCreatePaymentCodeInput(input);
+    if (this.http_client.should_validate) {
+      validate(CreatePaymentCodeInputSchema, input);
     }
 
-    return this._http_client.request<ApiResponse<PaymentCode>>({
+    return this.http_client.request<ApiResponse<PaymentCode>>({
       method: "POST",
-      path: `/${API_VERSION}/payment-codes`,
+      path: "/payment-codes",
       body: input,
-      idempotencyKey,
       config,
     });
   }
 
   /**
    * Retrieves a payment code by ID.
-   * @param id - The payment code ID (must start with "pmc-")
-   * @param config - Per-request configuration overrides
+   * @param id - The payment code ID
+   * @param config - Optional request configuration
    * @returns The payment code
    * @throws {MonimeValidationError} If ID validation fails
    * @throws {MonimeApiError} If the API returns an error
@@ -66,21 +76,21 @@ export class PaymentCodeModule {
     id: string,
     config?: RequestConfig,
   ): Promise<ApiResponse<PaymentCode>> {
-    if (this._http_client.shouldValidate) {
-      validatePaymentCodeId(id);
+    if (this.http_client.should_validate) {
+      validate(IdSchema, id);
     }
 
-    return this._http_client.request<ApiResponse<PaymentCode>>({
+    return this.http_client.request<ApiResponse<PaymentCode>>({
       method: "GET",
-      path: `/${API_VERSION}/payment-codes/${encodeURIComponent(id)}`,
+      path: `/payment-codes/${encodeURIComponent(id)}`,
       config,
     });
   }
 
   /**
-   * Lists payment codes with optional filtering.
+   * Lists payment codes with optional filtering and pagination.
    * @param params - Optional filter and pagination parameters
-   * @param config - Per-request configuration overrides
+   * @param config - Optional request configuration
    * @returns A paginated list of payment codes
    * @throws {MonimeValidationError} If params validation fails
    * @throws {MonimeApiError} If the API returns an error
@@ -89,8 +99,8 @@ export class PaymentCodeModule {
     params?: ListPaymentCodesParams,
     config?: RequestConfig,
   ): Promise<ApiListResponse<PaymentCode>> {
-    if (this._http_client.shouldValidate && params?.limit !== undefined) {
-      validateLimit(params.limit);
+    if (this.http_client.should_validate && params?.limit !== undefined) {
+      validate(LimitSchema, params.limit);
     }
 
     const query_params = params
@@ -103,9 +113,9 @@ export class PaymentCodeModule {
         }
       : undefined;
 
-    return this._http_client.request<ApiListResponse<PaymentCode>>({
+    return this.http_client.request<ApiListResponse<PaymentCode>>({
       method: "GET",
-      path: `/${API_VERSION}/payment-codes`,
+      path: "/payment-codes",
       params: query_params,
       config,
     });
@@ -113,9 +123,9 @@ export class PaymentCodeModule {
 
   /**
    * Updates a payment code.
-   * @param id - The payment code ID (must start with "pmc-")
-   * @param input - Fields to update (null values will clear the field)
-   * @param config - Per-request configuration overrides
+   * @param id - The payment code ID
+   * @param input - Fields to update
+   * @param config - Optional request configuration
    * @returns The updated payment code
    * @throws {MonimeValidationError} If validation fails
    * @throws {MonimeApiError} If the API returns an error
@@ -125,14 +135,14 @@ export class PaymentCodeModule {
     input: UpdatePaymentCodeInput,
     config?: RequestConfig,
   ): Promise<ApiResponse<PaymentCode>> {
-    if (this._http_client.shouldValidate) {
-      validatePaymentCodeId(id);
-      validateUpdatePaymentCodeInput(input);
+    if (this.http_client.should_validate) {
+      validate(IdSchema, id);
+      validate(UpdatePaymentCodeInputSchema, input);
     }
 
-    return this._http_client.request<ApiResponse<PaymentCode>>({
+    return this.http_client.request<ApiResponse<PaymentCode>>({
       method: "PATCH",
-      path: `/${API_VERSION}/payment-codes/${encodeURIComponent(id)}`,
+      path: `/payment-codes/${encodeURIComponent(id)}`,
       body: input,
       config,
     });
@@ -140,20 +150,20 @@ export class PaymentCodeModule {
 
   /**
    * Deletes a payment code.
-   * @param id - The payment code ID (must start with "pmc-")
-   * @param config - Per-request configuration overrides
+   * @param id - The payment code ID
+   * @param config - Optional request configuration
    * @returns Confirmation of deletion
    * @throws {MonimeValidationError} If ID validation fails
    * @throws {MonimeApiError} If the API returns an error
    */
   async delete(id: string, config?: RequestConfig): Promise<ApiDeleteResponse> {
-    if (this._http_client.shouldValidate) {
-      validatePaymentCodeId(id);
+    if (this.http_client.should_validate) {
+      validate(IdSchema, id);
     }
 
-    return this._http_client.request<ApiDeleteResponse>({
+    return this.http_client.request<ApiDeleteResponse>({
       method: "DELETE",
-      path: `/${API_VERSION}/payment-codes/${encodeURIComponent(id)}`,
+      path: `/payment-codes/${encodeURIComponent(id)}`,
       config,
     });
   }

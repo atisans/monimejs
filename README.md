@@ -1,6 +1,6 @@
 # monimejs
 
-Unofficial _(meaning not made by the Monime team)_, lightweight and easy js/ts SDK for interacting with monime's endpoints.
+Unofficial lightweight and easy js/ts SDK for interacting with monime's endpoints.
 
 ![npm version](https://img.shields.io/npm/v/monimejs.svg)
 ![npm downloads](https://img.shields.io/npm/dm/monimejs.svg)
@@ -29,7 +29,7 @@ Unofficial _(meaning not made by the Monime team)_, lightweight and easy js/ts S
 
 - [x] **Full API coverage** for Payment Codes and Payments endpoints
 - [x] **Client-based** auth: set credentials once per instance
-- [x] **Predictable** return shape: `{ success, result, messages }`
+- [x] **Predictable** return shape fully typed: `{ success, result, messages }`
 - [x] **Error handling** with typed error classes
 - [x] **Timeout configuration** with per-request overrides
 - [x] **Retry logic** with exponential backoff

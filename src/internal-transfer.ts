@@ -1,4 +1,4 @@
-import { API_VERSION, type MonimeHttpClient } from "./http-client";
+import type { MonimeHttpClient } from "./http-client";
 import type {
   ApiDeleteResponse,
   ApiListResponse,
@@ -10,46 +10,62 @@ import type {
   UpdateInternalTransferInput,
 } from "./types";
 import {
-  validateCreateInternalTransferInput,
-  validateInternalTransferId,
-  validateLimit,
-  validateUpdateInternalTransferInput,
+  CreateInternalTransferInputSchema,
+  IdSchema,
+  LimitSchema,
+  UpdateInternalTransferInputSchema,
+  validate,
 } from "./validation";
 
 /**
  * Module for managing internal transfers.
- * Internal transfers move funds between financial accounts within the same space.
+ *
+ * Internal transfers move funds between financial accounts within the same
+ * Monime workspace. Unlike payouts (which send funds externally), internal
+ * transfers are instant, free, and ideal for fund management operations.
+ *
+ * Use cases:
+ * - Move funds from collection accounts to disbursement accounts
+ * - Split revenue between multiple business units
+ * - Reserve funds for specific purposes or escrow
+ * - Consolidate balances across accounts
+ *
+ * Features:
+ * - Instant settlement between accounts
+ * - No transaction fees
+ * - Same-currency transfers only
+ * - Automatic balance updates
+ * - Full audit trail via financial transactions
+ *
+ * @see {@link https://docs.monime.io/apis/internal-transfers} Internal Transfers API Documentation
  */
 export class InternalTransferModule {
-  private _http_client: MonimeHttpClient;
+  private http_client: MonimeHttpClient;
 
-  constructor(httpClient: MonimeHttpClient) {
-    this._http_client = httpClient;
+  constructor(http_client: MonimeHttpClient) {
+    this.http_client = http_client;
   }
 
   /**
    * Creates a new internal transfer.
    * @param input - Transfer configuration including amount and accounts
-   * @param idempotencyKey - Optional key to prevent duplicate requests
-   * @param config - Per-request configuration overrides
+   * @param config - Optional request configuration (timeout, idempotencyKey, signal)
    * @returns The created internal transfer
    * @throws {MonimeValidationError} If input validation fails
    * @throws {MonimeApiError} If the API returns an error
    */
   async create(
     input: CreateInternalTransferInput,
-    idempotencyKey?: string,
     config?: RequestConfig,
   ): Promise<ApiResponse<InternalTransfer>> {
-    if (this._http_client.shouldValidate) {
-      validateCreateInternalTransferInput(input);
+    if (this.http_client.should_validate) {
+      validate(CreateInternalTransferInputSchema, input);
     }
 
-    return this._http_client.request<ApiResponse<InternalTransfer>>({
+    return this.http_client.request<ApiResponse<InternalTransfer>>({
       method: "POST",
-      path: `/${API_VERSION}/internal-transfers`,
+      path: "/internal-transfers",
       body: input,
-      idempotencyKey,
       config,
     });
   }
@@ -57,7 +73,7 @@ export class InternalTransferModule {
   /**
    * Retrieves an internal transfer by ID.
    * @param id - The internal transfer ID (must start with "trn-")
-   * @param config - Per-request configuration overrides
+   * @param config - Optional request configuration (timeout, idempotencyKey, signal)
    * @returns The internal transfer
    * @throws {MonimeValidationError} If ID validation fails
    * @throws {MonimeApiError} If the API returns an error
@@ -66,13 +82,13 @@ export class InternalTransferModule {
     id: string,
     config?: RequestConfig,
   ): Promise<ApiResponse<InternalTransfer>> {
-    if (this._http_client.shouldValidate) {
-      validateInternalTransferId(id);
+    if (this.http_client.should_validate) {
+      validate(IdSchema, id);
     }
 
-    return this._http_client.request<ApiResponse<InternalTransfer>>({
+    return this.http_client.request<ApiResponse<InternalTransfer>>({
       method: "GET",
-      path: `/${API_VERSION}/internal-transfers/${encodeURIComponent(id)}`,
+      path: `/internal-transfers/${encodeURIComponent(id)}`,
       config,
     });
   }
@@ -80,7 +96,7 @@ export class InternalTransferModule {
   /**
    * Lists internal transfers with optional filtering.
    * @param params - Optional filter and pagination parameters
-   * @param config - Per-request configuration overrides
+   * @param config - Optional request configuration (timeout, idempotencyKey, signal)
    * @returns A paginated list of internal transfers
    * @throws {MonimeValidationError} If params validation fails
    * @throws {MonimeApiError} If the API returns an error
@@ -89,8 +105,8 @@ export class InternalTransferModule {
     params?: ListInternalTransfersParams,
     config?: RequestConfig,
   ): Promise<ApiListResponse<InternalTransfer>> {
-    if (this._http_client.shouldValidate && params?.limit !== undefined) {
-      validateLimit(params.limit);
+    if (this.http_client.should_validate && params?.limit !== undefined) {
+      validate(LimitSchema, params.limit);
     }
 
     const query_params = params
@@ -104,9 +120,9 @@ export class InternalTransferModule {
         }
       : undefined;
 
-    return this._http_client.request<ApiListResponse<InternalTransfer>>({
+    return this.http_client.request<ApiListResponse<InternalTransfer>>({
       method: "GET",
-      path: `/${API_VERSION}/internal-transfers`,
+      path: "/internal-transfers",
       params: query_params,
       config,
     });
@@ -115,8 +131,8 @@ export class InternalTransferModule {
   /**
    * Updates an internal transfer.
    * @param id - The internal transfer ID (must start with "trn-")
-   * @param input - Fields to update (null values will clear the field)
-   * @param config - Per-request configuration overrides
+   * @param input - Fields to update
+   * @param config - Optional request configuration (timeout, idempotencyKey, signal)
    * @returns The updated internal transfer
    * @throws {MonimeValidationError} If validation fails
    * @throws {MonimeApiError} If the API returns an error
@@ -126,14 +142,14 @@ export class InternalTransferModule {
     input: UpdateInternalTransferInput,
     config?: RequestConfig,
   ): Promise<ApiResponse<InternalTransfer>> {
-    if (this._http_client.shouldValidate) {
-      validateInternalTransferId(id);
-      validateUpdateInternalTransferInput(input);
+    if (this.http_client.should_validate) {
+      validate(IdSchema, id);
+      validate(UpdateInternalTransferInputSchema, input);
     }
 
-    return this._http_client.request<ApiResponse<InternalTransfer>>({
+    return this.http_client.request<ApiResponse<InternalTransfer>>({
       method: "PATCH",
-      path: `/${API_VERSION}/internal-transfers/${encodeURIComponent(id)}`,
+      path: `/internal-transfers/${encodeURIComponent(id)}`,
       body: input,
       config,
     });
@@ -142,19 +158,19 @@ export class InternalTransferModule {
   /**
    * Deletes an internal transfer.
    * @param id - The internal transfer ID (must start with "trn-")
-   * @param config - Per-request configuration overrides
+   * @param config - Optional request configuration (timeout, idempotencyKey, signal)
    * @returns Confirmation of deletion
    * @throws {MonimeValidationError} If ID validation fails
    * @throws {MonimeApiError} If the API returns an error
    */
   async delete(id: string, config?: RequestConfig): Promise<ApiDeleteResponse> {
-    if (this._http_client.shouldValidate) {
-      validateInternalTransferId(id);
+    if (this.http_client.should_validate) {
+      validate(IdSchema, id);
     }
 
-    return this._http_client.request<ApiDeleteResponse>({
+    return this.http_client.request<ApiDeleteResponse>({
       method: "DELETE",
-      path: `/${API_VERSION}/internal-transfers/${encodeURIComponent(id)}`,
+      path: `/internal-transfers/${encodeURIComponent(id)}`,
       config,
     });
   }

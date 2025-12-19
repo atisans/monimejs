@@ -1,8 +1,6 @@
 // Main client
-
-// Modules
-export { CheckoutSessionModule } from "./checkout-session";
 export { MonimeClient } from "./client";
+
 // Errors
 export {
   MonimeApiError,
@@ -10,12 +8,8 @@ export {
   MonimeNetworkError,
   MonimeTimeoutError,
   MonimeValidationError,
+  type ValidationIssue,
 } from "./errors";
-export { InternalTransferModule } from "./internal-transfer";
-export { PaymentModule } from "./payment";
-export { PaymentCodeModule } from "./payment-code";
-export { PayoutModule } from "./payout";
+
 // Types
 export * from "./types";
-export { UssdOtpModule } from "./ussd-otp";
-export { WebhookModule } from "./webhook";

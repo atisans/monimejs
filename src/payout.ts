@@ -1,4 +1,4 @@
-import { API_VERSION, type MonimeHttpClient } from "./http-client";
+import type { MonimeHttpClient } from "./http-client";
 import type {
   ApiDeleteResponse,
   ApiListResponse,
@@ -10,74 +10,85 @@ import type {
   UpdatePayoutInput,
 } from "./types";
 import {
-  validateCreatePayoutInput,
-  validateLimit,
-  validatePayoutId,
-  validateUpdatePayoutInput,
+  CreatePayoutInputSchema,
+  IdSchema,
+  LimitSchema,
+  UpdatePayoutInputSchema,
+  validate,
 } from "./validation";
 
 /**
  * Module for managing payouts.
- * Payouts are used to transfer funds to external accounts (bank, mobile money, wallet).
+ *
+ * Payouts enable disbursements from your financial accounts to external recipients
+ * via bank transfers, mobile money, or wallet transfers. Use payouts for vendor
+ * payments, refunds, salary disbursements, and other outbound transfers.
+ *
+ * Features:
+ * - Send funds to bank accounts (local and international)
+ * - Disburse to mobile money wallets (Orange, Africell, QCell)
+ * - Transfer to other Monime wallet addresses
+ * - Track payout status (pending, completed, failed)
+ * - Batch processing support
+ * - Transaction reference tracking
+ *
+ * @see {@link https://docs.monime.io/apis/payouts} Payouts API Documentation
  */
 export class PayoutModule {
-  private _http_client: MonimeHttpClient;
+  private http_client: MonimeHttpClient;
 
-  constructor(httpClient: MonimeHttpClient) {
-    this._http_client = httpClient;
+  constructor(http_client: MonimeHttpClient) {
+    this.http_client = http_client;
   }
 
   /**
    * Creates a new payout.
    * @param input - Payout configuration including amount and destination
-   * @param idempotencyKey - Optional key to prevent duplicate requests
-   * @param config - Per-request configuration overrides
+   * @param config - Optional request configuration (timeout, idempotencyKey, signal)
    * @returns The created payout
    * @throws {MonimeValidationError} If input validation fails
    * @throws {MonimeApiError} If the API returns an error
    */
   async create(
     input: CreatePayoutInput,
-    idempotencyKey?: string,
     config?: RequestConfig,
   ): Promise<ApiResponse<Payout>> {
-    if (this._http_client.shouldValidate) {
-      validateCreatePayoutInput(input);
+    if (this.http_client.should_validate) {
+      validate(CreatePayoutInputSchema, input);
     }
 
-    return this._http_client.request<ApiResponse<Payout>>({
+    return this.http_client.request<ApiResponse<Payout>>({
       method: "POST",
-      path: `/${API_VERSION}/payouts`,
+      path: "/payouts",
       body: input,
-      idempotencyKey,
       config,
     });
   }
 
   /**
    * Retrieves a payout by ID.
-   * @param id - The payout ID (must start with "pot-")
-   * @param config - Per-request configuration overrides
+   * @param id - The payout ID
+   * @param config - Optional request configuration
    * @returns The payout
    * @throws {MonimeValidationError} If ID validation fails
    * @throws {MonimeApiError} If the API returns an error
    */
   async get(id: string, config?: RequestConfig): Promise<ApiResponse<Payout>> {
-    if (this._http_client.shouldValidate) {
-      validatePayoutId(id);
+    if (this.http_client.should_validate) {
+      validate(IdSchema, id);
     }
 
-    return this._http_client.request<ApiResponse<Payout>>({
+    return this.http_client.request<ApiResponse<Payout>>({
       method: "GET",
-      path: `/${API_VERSION}/payouts/${encodeURIComponent(id)}`,
+      path: `/payouts/${encodeURIComponent(id)}`,
       config,
     });
   }
 
   /**
-   * Lists payouts with optional filtering.
+   * Lists payouts with optional filtering and pagination.
    * @param params - Optional filter and pagination parameters
-   * @param config - Per-request configuration overrides
+   * @param config - Optional request configuration
    * @returns A paginated list of payouts
    * @throws {MonimeValidationError} If params validation fails
    * @throws {MonimeApiError} If the API returns an error
@@ -86,8 +97,8 @@ export class PayoutModule {
     params?: ListPayoutsParams,
     config?: RequestConfig,
   ): Promise<ApiListResponse<Payout>> {
-    if (this._http_client.shouldValidate && params?.limit !== undefined) {
-      validateLimit(params.limit);
+    if (this.http_client.should_validate && params?.limit !== undefined) {
+      validate(LimitSchema, params.limit);
     }
 
     const query_params = params
@@ -102,9 +113,9 @@ export class PayoutModule {
         }
       : undefined;
 
-    return this._http_client.request<ApiListResponse<Payout>>({
+    return this.http_client.request<ApiListResponse<Payout>>({
       method: "GET",
-      path: `/${API_VERSION}/payouts`,
+      path: "/payouts",
       params: query_params,
       config,
     });
@@ -112,9 +123,9 @@ export class PayoutModule {
 
   /**
    * Updates a payout.
-   * @param id - The payout ID (must start with "pot-")
-   * @param input - Fields to update (null values will clear the field)
-   * @param config - Per-request configuration overrides
+   * @param id - The payout ID
+   * @param input - Fields to update
+   * @param config - Optional request configuration
    * @returns The updated payout
    * @throws {MonimeValidationError} If validation fails
    * @throws {MonimeApiError} If the API returns an error
@@ -124,14 +135,14 @@ export class PayoutModule {
     input: UpdatePayoutInput,
     config?: RequestConfig,
   ): Promise<ApiResponse<Payout>> {
-    if (this._http_client.shouldValidate) {
-      validatePayoutId(id);
-      validateUpdatePayoutInput(input);
+    if (this.http_client.should_validate) {
+      validate(IdSchema, id);
+      validate(UpdatePayoutInputSchema, input);
     }
 
-    return this._http_client.request<ApiResponse<Payout>>({
+    return this.http_client.request<ApiResponse<Payout>>({
       method: "PATCH",
-      path: `/${API_VERSION}/payouts/${encodeURIComponent(id)}`,
+      path: `/payouts/${encodeURIComponent(id)}`,
       body: input,
       config,
     });
@@ -139,20 +150,20 @@ export class PayoutModule {
 
   /**
    * Deletes a payout.
-   * @param id - The payout ID (must start with "pot-")
-   * @param config - Per-request configuration overrides
+   * @param id - The payout ID
+   * @param config - Optional request configuration
    * @returns Confirmation of deletion
    * @throws {MonimeValidationError} If ID validation fails
    * @throws {MonimeApiError} If the API returns an error
    */
   async delete(id: string, config?: RequestConfig): Promise<ApiDeleteResponse> {
-    if (this._http_client.shouldValidate) {
-      validatePayoutId(id);
+    if (this.http_client.should_validate) {
+      validate(IdSchema, id);
     }
 
-    return this._http_client.request<ApiDeleteResponse>({
+    return this.http_client.request<ApiDeleteResponse>({
       method: "DELETE",
-      path: `/${API_VERSION}/payouts/${encodeURIComponent(id)}`,
+      path: `/payouts/${encodeURIComponent(id)}`,
       config,
     });
   }

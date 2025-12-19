@@ -1,6 +1,18 @@
 import * as v from "valibot";
 
 // ============================================================================
+// Helper Functions
+// ============================================================================
+
+// Helper for optional nullable fields (used in update inputs)
+// In update operations: missing field = don't update, null = clear, value = update
+function optional_nullable<
+  T extends v.BaseSchema<unknown, unknown, v.BaseIssue<unknown>>,
+>(schema: T) {
+  return v.optional(v.nullable(schema));
+}
+
+// ============================================================================
 // Shared Schemas
 // ============================================================================
 
@@ -24,11 +36,7 @@ export const MetadataSchema = v.pipe(
 // ============================================================================
 
 export const ClientOptionsSchema = v.object({
-  spaceId: v.pipe(
-    v.string(),
-    v.nonEmpty("spaceId is required"),
-    v.startsWith("spc-", "spaceId must start with 'spc-'"),
-  ),
+  spaceId: v.pipe(v.string(), v.nonEmpty("spaceId is required")),
   accessToken: v.pipe(v.string(), v.nonEmpty("accessToken is required")),
   baseUrl: v.optional(v.string()),
   timeout: v.optional(v.pipe(v.number(), v.minValue(0))),
@@ -39,44 +47,10 @@ export const ClientOptionsSchema = v.object({
 });
 
 // ============================================================================
-// ID Schemas
+// ID Schema (single reusable schema for all resource IDs)
 // ============================================================================
 
-export const PaymentCodeIdSchema = v.pipe(
-  v.string(),
-  v.nonEmpty("id is required"),
-  v.startsWith("pmc-", "Payment code ID must start with 'pmc-'"),
-);
-
-export const PaymentIdSchema = v.pipe(
-  v.string(),
-  v.nonEmpty("id is required"),
-  v.startsWith("pay-", "Payment ID must start with 'pay-'"),
-);
-
-export const CheckoutSessionIdSchema = v.pipe(
-  v.string(),
-  v.nonEmpty("id is required"),
-  v.startsWith("cos-", "Checkout session ID must start with 'cos-'"),
-);
-
-export const PayoutIdSchema = v.pipe(
-  v.string(),
-  v.nonEmpty("id is required"),
-  v.startsWith("pot-", "Payout ID must start with 'pot-'"),
-);
-
-export const WebhookIdSchema = v.pipe(
-  v.string(),
-  v.nonEmpty("id is required"),
-  v.startsWith("whk-", "Webhook ID must start with 'whk-'"),
-);
-
-export const InternalTransferIdSchema = v.pipe(
-  v.string(),
-  v.nonEmpty("id is required"),
-  v.startsWith("trn-", "Internal transfer ID must start with 'trn-'"),
-);
+export const IdSchema = v.pipe(v.string(), v.nonEmpty("id is required"));
 
 // ============================================================================
 // List Params Schema
@@ -90,25 +64,40 @@ export const LimitSchema = v.optional(
 // Payment Code Schemas
 // ============================================================================
 
-export const CreatePaymentCodeInputSchema = v.object({
+const PaymentCodeBaseFields = {
   name: v.pipe(v.string(), v.minLength(3), v.maxLength(64)),
-  mode: v.optional(v.picklist(["one_time", "recurrent"])),
   enable: v.optional(v.boolean()),
   amount: v.optional(AmountSchema),
   duration: v.optional(v.string()),
-  customer: v.optional(v.object({ name: v.optional(v.nullable(v.string())) })),
+  customer: v.optional(v.object({ name: optional_nullable(v.string()) })),
   reference: v.optional(v.string()),
   authorizedProviders: v.optional(v.array(v.picklist(["m17", "m18", "m13"]))),
   authorizedPhoneNumber: v.optional(v.string()),
-  recurrentPaymentTarget: v.optional(
-    v.object({
-      expectedPaymentCount: v.optional(v.nullable(v.number())),
-      expectedPaymentTotal: v.optional(v.nullable(AmountSchema)),
-    }),
-  ),
   financialAccountId: v.optional(v.string()),
   metadata: v.optional(MetadataSchema),
+};
+
+export const RecurrentPaymentTargetSchema = v.object({
+  expectedPaymentCount: optional_nullable(v.number()),
+  expectedPaymentTotal: optional_nullable(AmountSchema),
 });
+
+const CreatePaymentCodeOneTimeSchema = v.object({
+  ...PaymentCodeBaseFields,
+  mode: v.optional(v.literal("one_time")),
+  recurrentPaymentTarget: v.optional(RecurrentPaymentTargetSchema),
+});
+
+const CreatePaymentCodeRecurrentSchema = v.object({
+  ...PaymentCodeBaseFields,
+  mode: v.literal("recurrent"),
+  recurrentPaymentTarget: RecurrentPaymentTargetSchema,
+});
+
+export const CreatePaymentCodeInputSchema = v.variant("mode", [
+  CreatePaymentCodeOneTimeSchema,
+  CreatePaymentCodeRecurrentSchema,
+]);
 
 // ============================================================================
 // Checkout Session Schemas
@@ -165,7 +154,7 @@ const PayoutDestinationMomoSchema = v.object({
 const PayoutDestinationWalletSchema = v.object({
   type: v.literal("wallet"),
   providerId: v.pipe(v.string(), v.nonEmpty()),
-  walletId: v.pipe(v.string(), v.nonEmpty()),
+  walletId: v.optional(v.pipe(v.string(), v.nonEmpty())),
 });
 
 export const PayoutDestinationSchema = v.variant("type", [
@@ -227,14 +216,14 @@ export const CreateWebhookInputSchema = v.object({
 // Internal Transfer Schemas
 // ============================================================================
 
-export const FinancialAccountSchema = v.object({
+export const FinancialAccountRefSchema = v.object({
   id: v.pipe(v.string(), v.nonEmpty()),
 });
 
 export const CreateInternalTransferInputSchema = v.object({
   amount: AmountSchema,
-  sourceFinancialAccount: FinancialAccountSchema,
-  destinationFinancialAccount: FinancialAccountSchema,
+  sourceFinancialAccount: FinancialAccountRefSchema,
+  destinationFinancialAccount: FinancialAccountRefSchema,
   description: v.optional(v.pipe(v.string(), v.maxLength(150))),
   metadata: v.optional(MetadataSchema),
 });
@@ -242,12 +231,6 @@ export const CreateInternalTransferInputSchema = v.object({
 // ============================================================================
 // USSD OTP Schemas
 // ============================================================================
-
-export const UssdOtpIdSchema = v.pipe(
-  v.string(),
-  v.nonEmpty("id is required"),
-  v.startsWith("uop-", "USSD OTP ID must start with 'uop-'"),
-);
 
 export const CreateUssdOtpInputSchema = v.object({
   authorizedPhoneNumber: v.pipe(v.string(), v.nonEmpty()),
@@ -260,75 +243,126 @@ export const CreateUssdOtpInputSchema = v.object({
 // Update Input Schemas
 // ============================================================================
 
-const _nullable_metadata_schema = v.optional(v.nullable(MetadataSchema));
-const _nullable_amount_schema = v.optional(v.nullable(AmountSchema));
-
 export const UpdatePaymentCodeInputSchema = v.object({
-  name: v.optional(
-    v.nullable(v.pipe(v.string(), v.minLength(3), v.maxLength(64))),
+  name: optional_nullable(v.pipe(v.string(), v.minLength(3), v.maxLength(64))),
+  amount: optional_nullable(AmountSchema),
+  duration: optional_nullable(v.string()),
+  enable: optional_nullable(v.boolean()),
+  customer: optional_nullable(
+    v.object({ name: optional_nullable(v.string()) }),
   ),
-  amount: _nullable_amount_schema,
-  duration: v.optional(v.nullable(v.string())),
-  enable: v.optional(v.nullable(v.boolean())),
-  customer: v.optional(
-    v.nullable(v.object({ name: v.optional(v.nullable(v.string())) })),
+  reference: optional_nullable(v.string()),
+  authorizedProviders: optional_nullable(
+    v.array(v.picklist(["m17", "m18", "m13"])),
   ),
-  reference: v.optional(v.nullable(v.string())),
-  authorizedProviders: v.optional(
-    v.nullable(v.array(v.picklist(["m17", "m18", "m13"]))),
+  authorizedPhoneNumber: optional_nullable(v.string()),
+  recurrentPaymentTarget: optional_nullable(
+    v.object({
+      expectedPaymentCount: optional_nullable(v.number()),
+      expectedPaymentTotal: optional_nullable(AmountSchema),
+    }),
   ),
-  authorizedPhoneNumber: v.optional(v.nullable(v.string())),
-  recurrentPaymentTarget: v.optional(
-    v.nullable(
-      v.object({
-        expectedPaymentCount: v.optional(v.nullable(v.number())),
-        expectedPaymentTotal: v.optional(v.nullable(AmountSchema)),
-      }),
-    ),
-  ),
-  financialAccountId: v.optional(v.nullable(v.string())),
-  metadata: _nullable_metadata_schema,
+  financialAccountId: optional_nullable(v.string()),
+  metadata: optional_nullable(MetadataSchema),
 });
 
 export const UpdatePaymentInputSchema = v.object({
-  name: v.optional(v.nullable(v.string())),
-  metadata: _nullable_metadata_schema,
+  name: optional_nullable(v.string()),
+  metadata: optional_nullable(MetadataSchema),
 });
 
 export const UpdatePayoutInputSchema = v.object({
-  metadata: _nullable_metadata_schema,
+  metadata: optional_nullable(MetadataSchema),
 });
 
 export const UpdateWebhookInputSchema = v.object({
-  name: v.optional(
-    v.nullable(v.pipe(v.string(), v.minLength(1), v.maxLength(100))),
+  name: optional_nullable(v.pipe(v.string(), v.minLength(1), v.maxLength(100))),
+  url: optional_nullable(v.pipe(v.string(), v.nonEmpty(), v.maxLength(255))),
+  enabled: optional_nullable(v.boolean()),
+  apiRelease: optional_nullable(v.picklist(["caph", "siriusb"])),
+  events: optional_nullable(
+    v.pipe(v.array(v.string()), v.minLength(1), v.maxLength(100)),
   ),
-  url: v.optional(
-    v.nullable(v.pipe(v.string(), v.nonEmpty(), v.maxLength(255))),
-  ),
-  enabled: v.optional(v.nullable(v.boolean())),
-  apiRelease: v.optional(v.nullable(v.picklist(["caph", "siriusb"]))),
-  events: v.optional(
-    v.nullable(v.pipe(v.array(v.string()), v.minLength(1), v.maxLength(100))),
-  ),
-  headers: v.optional(
-    v.nullable(
-      v.pipe(
-        v.record(v.string(), v.string()),
-        v.check(
-          (obj) => Object.keys(obj).length <= 10,
-          "headers cannot have more than 10 properties",
-        ),
+  headers: optional_nullable(
+    v.pipe(
+      v.record(v.string(), v.string()),
+      v.check(
+        (obj) => Object.keys(obj).length <= 10,
+        "headers cannot have more than 10 properties",
       ),
     ),
   ),
-  alertEmails: v.optional(
-    v.nullable(v.pipe(v.array(v.string()), v.maxLength(2))),
-  ),
-  metadata: _nullable_metadata_schema,
+  alertEmails: optional_nullable(v.pipe(v.array(v.string()), v.maxLength(2))),
+  metadata: optional_nullable(MetadataSchema),
 });
 
 export const UpdateInternalTransferInputSchema = v.object({
-  description: v.optional(v.nullable(v.pipe(v.string(), v.maxLength(150)))),
-  metadata: _nullable_metadata_schema,
+  description: optional_nullable(v.pipe(v.string(), v.maxLength(150))),
+  metadata: optional_nullable(MetadataSchema),
 });
+
+// ============================================================================
+// Financial Account Schemas
+// ============================================================================
+
+export const CreateFinancialAccountInputSchema = v.object({
+  name: v.pipe(v.string(), v.minLength(1), v.maxLength(100)),
+  currency: CurrencySchema,
+  reference: v.optional(v.pipe(v.string(), v.maxLength(64))),
+  description: v.optional(v.pipe(v.string(), v.maxLength(150))),
+  metadata: v.optional(MetadataSchema),
+});
+
+export const UpdateFinancialAccountInputSchema = v.object({
+  name: optional_nullable(v.pipe(v.string(), v.minLength(1), v.maxLength(100))),
+  reference: optional_nullable(v.pipe(v.string(), v.maxLength(64))),
+  description: optional_nullable(v.pipe(v.string(), v.maxLength(150))),
+  metadata: optional_nullable(MetadataSchema),
+});
+
+// ============================================================================
+// Receipt Schemas
+// ============================================================================
+
+export const ReceiptOrderNumberSchema = v.pipe(
+  v.string(),
+  v.nonEmpty("orderNumber is required"),
+  v.maxLength(20, "orderNumber cannot exceed 20 characters"),
+);
+
+export const RedeemEntitlementInputSchema = v.object({
+  key: v.pipe(v.string(), v.minLength(1), v.maxLength(100)),
+  units: v.optional(v.pipe(v.number(), v.integer(), v.minValue(1))),
+});
+
+export const RedeemReceiptInputSchema = v.object({
+  redeemAll: optional_nullable(v.boolean()),
+  entitlements: optional_nullable(
+    v.pipe(v.array(RedeemEntitlementInputSchema), v.minLength(1)),
+  ),
+  metadata: v.optional(MetadataSchema),
+});
+
+// ============================================================================
+// Bank Schemas
+// ============================================================================
+
+export const BankProviderIdSchema = v.pipe(
+  v.string(),
+  v.nonEmpty("providerId is required"),
+);
+
+export const CountryCodeSchema = v.pipe(
+  v.string(),
+  v.nonEmpty("country is required"),
+  v.length(2, "country must be a 2-letter ISO 3166-1 alpha-2 code"),
+);
+
+// ============================================================================
+// Momo Schemas
+// ============================================================================
+
+export const MomoProviderIdSchema = v.pipe(
+  v.string(),
+  v.nonEmpty("providerId is required"),
+);

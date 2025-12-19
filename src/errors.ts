@@ -67,14 +67,26 @@ export class MonimeTimeoutError extends MonimeError {
 }
 
 /**
+ * Represents a single validation issue with details about what failed.
+ */
+export type ValidationIssue = {
+  /** Human-readable error message */
+  message: string;
+  /** Path to the field that failed validation (e.g., "amount.value", "lineItems.0.name") */
+  field: string;
+  /** The invalid value that was provided */
+  value?: unknown;
+};
+
+/**
  * Error thrown when input validation fails.
- * Contains the field name that failed validation and optionally the invalid value.
+ * Contains all validation issues found, allowing users to fix multiple errors at once.
  */
 export class MonimeValidationError extends MonimeError {
   constructor(
     message: string,
-    public field: string,
-    public value?: unknown,
+    /** All validation issues found during validation */
+    public issues: ValidationIssue[],
   ) {
     super(message);
     this.name = "MonimeValidationError";
