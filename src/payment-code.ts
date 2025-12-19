@@ -10,10 +10,11 @@ import type {
   UpdatePaymentCodeInput,
 } from "./types";
 import {
-  validateCreatePaymentCodeInput,
-  validateLimit,
-  validateId,
-  validateUpdatePaymentCodeInput,
+  CreatePaymentCodeInputSchema,
+  IdSchema,
+  LimitSchema,
+  UpdatePaymentCodeInputSchema,
+  validate,
 } from "./validation";
 
 /**
@@ -51,8 +52,8 @@ export class PaymentCodeModule {
     input: CreatePaymentCodeInput,
     config?: RequestConfig,
   ): Promise<ApiResponse<PaymentCode>> {
-    if (this.http_client.shouldValidate) {
-      validateCreatePaymentCodeInput(input);
+    if (this.http_client.should_validate) {
+      validate(CreatePaymentCodeInputSchema, input);
     }
 
     return this.http_client.request<ApiResponse<PaymentCode>>({
@@ -75,8 +76,8 @@ export class PaymentCodeModule {
     id: string,
     config?: RequestConfig,
   ): Promise<ApiResponse<PaymentCode>> {
-    if (this.http_client.shouldValidate) {
-      validateId(id);
+    if (this.http_client.should_validate) {
+      validate(IdSchema, id);
     }
 
     return this.http_client.request<ApiResponse<PaymentCode>>({
@@ -98,8 +99,8 @@ export class PaymentCodeModule {
     params?: ListPaymentCodesParams,
     config?: RequestConfig,
   ): Promise<ApiListResponse<PaymentCode>> {
-    if (this.http_client.shouldValidate && params?.limit !== undefined) {
-      validateLimit(params.limit);
+    if (this.http_client.should_validate && params?.limit !== undefined) {
+      validate(LimitSchema, params.limit);
     }
 
     const query_params = params
@@ -134,9 +135,9 @@ export class PaymentCodeModule {
     input: UpdatePaymentCodeInput,
     config?: RequestConfig,
   ): Promise<ApiResponse<PaymentCode>> {
-    if (this.http_client.shouldValidate) {
-      validateId(id);
-      validateUpdatePaymentCodeInput(input);
+    if (this.http_client.should_validate) {
+      validate(IdSchema, id);
+      validate(UpdatePaymentCodeInputSchema, input);
     }
 
     return this.http_client.request<ApiResponse<PaymentCode>>({
@@ -156,8 +157,8 @@ export class PaymentCodeModule {
    * @throws {MonimeApiError} If the API returns an error
    */
   async delete(id: string, config?: RequestConfig): Promise<ApiDeleteResponse> {
-    if (this.http_client.shouldValidate) {
-      validateId(id);
+    if (this.http_client.should_validate) {
+      validate(IdSchema, id);
     }
 
     return this.http_client.request<ApiDeleteResponse>({

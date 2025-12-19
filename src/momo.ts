@@ -7,9 +7,10 @@ import type {
   RequestConfig,
 } from "./types";
 import {
-  validateCountryCode,
-  validateLimit,
-  validateMomoProviderId,
+  CountryCodeSchema,
+  LimitSchema,
+  MomoProviderIdSchema,
+  validate,
 } from "./validation";
 
 /**
@@ -60,10 +61,10 @@ export class MomoModule {
     params: ListMomosParams,
     config?: RequestConfig,
   ): Promise<ApiListResponse<Momo>> {
-    if (this.http_client.shouldValidate) {
-      validateCountryCode(params.country);
+    if (this.http_client.should_validate) {
+      validate(CountryCodeSchema, params.country);
       if (params.limit !== undefined) {
-        validateLimit(params.limit);
+        validate(LimitSchema, params.limit);
       }
     }
 
@@ -93,8 +94,8 @@ export class MomoModule {
     providerId: string,
     config?: RequestConfig,
   ): Promise<ApiResponse<Momo>> {
-    if (this.http_client.shouldValidate) {
-      validateMomoProviderId(providerId);
+    if (this.http_client.should_validate) {
+      validate(MomoProviderIdSchema, providerId);
     }
 
     return this.http_client.request<ApiResponse<Momo>>({

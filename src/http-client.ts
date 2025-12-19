@@ -5,7 +5,7 @@ import {
   MonimeValidationError,
 } from "./errors";
 import type { ClientOptions, RequestConfig } from "./types";
-import { validateClientOptions } from "./validation";
+import { ClientOptionsSchema, validate } from "./validation";
 
 /** API version prefix for all endpoints */
 const API_VERSION = "v1";
@@ -69,7 +69,7 @@ export class MonimeHttpClient {
 
     // Validate options if enabled (default: true)
     if (options.validateInputs !== false) {
-      validateClientOptions(options);
+      validate(ClientOptionsSchema, options);
     }
 
     this.base_url = options.baseUrl ?? DEFAULT_BASE_URL;
@@ -85,7 +85,7 @@ export class MonimeHttpClient {
   /**
    * Whether input validation is enabled
    */
-  get shouldValidate(): boolean {
+  get should_validate(): boolean {
     return this.validate_inputs;
   }
 

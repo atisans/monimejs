@@ -121,7 +121,9 @@ async function getAllMomos(country) {
 
 // Usage
 const allSLMomos = await getAllMomos("SL");
-console.log(`Total mobile money providers in Sierra Leone: ${allSLMomos.length}`);
+console.log(
+  `Total mobile money providers in Sierra Leone: ${allSLMomos.length}`,
+);
 
 // ===================================
 // 3. GET A SPECIFIC MOBILE MONEY PROVIDER
@@ -323,8 +325,7 @@ async function getProviderDetails(providerId) {
           supported: momo.featureSet.payment.canPayFrom,
           schemes: momo.featureSet.payment.schemes,
         },
-        kycVerification:
-          momo.featureSet.kycVerification.canVerifyAccount,
+        kycVerification: momo.featureSet.kycVerification.canVerifyAccount,
       },
       metadata: {
         created: momo.createTime,
@@ -377,9 +378,7 @@ async function getMomosByScheme(country, scheme) {
     const matchingMomos = response.result.filter((momo) => {
       const payoutSchemes = momo.featureSet.payout.schemes;
       const paymentSchemes = momo.featureSet.payment.schemes;
-      return (
-        payoutSchemes.includes(scheme) || paymentSchemes.includes(scheme)
-      );
+      return payoutSchemes.includes(scheme) || paymentSchemes.includes(scheme);
     });
 
     console.log(`Mobile money providers supporting ${scheme} in ${country}:`);
@@ -456,7 +455,9 @@ async function getKycEnabledMomos(country) {
         momo.status.active && momo.featureSet.kycVerification.canVerifyAccount,
     );
 
-    console.log(`Mobile money providers supporting KYC verification in ${country}:`);
+    console.log(
+      `Mobile money providers supporting KYC verification in ${country}:`,
+    );
     console.log(`Found ${kycMomos.length} providers`);
 
     const dropdownOptions = kycMomos.map((momo) => ({
@@ -488,7 +489,8 @@ function validatePhoneNumber(phoneNumber, providerId) {
   if (!/^\+\d{1,3}\d{7,14}$/.test(cleaned)) {
     return {
       valid: false,
-      reason: "Invalid phone number format. Use international format (e.g., +23276123456)",
+      reason:
+        "Invalid phone number format. Use international format (e.g., +23276123456)",
     };
   }
 

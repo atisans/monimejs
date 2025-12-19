@@ -10,10 +10,11 @@ import type {
   UpdatePayoutInput,
 } from "./types";
 import {
-  validateCreatePayoutInput,
-  validateLimit,
-  validateId,
-  validateUpdatePayoutInput,
+  CreatePayoutInputSchema,
+  IdSchema,
+  LimitSchema,
+  UpdatePayoutInputSchema,
+  validate,
 } from "./validation";
 
 /**
@@ -52,8 +53,8 @@ export class PayoutModule {
     input: CreatePayoutInput,
     config?: RequestConfig,
   ): Promise<ApiResponse<Payout>> {
-    if (this.http_client.shouldValidate) {
-      validateCreatePayoutInput(input);
+    if (this.http_client.should_validate) {
+      validate(CreatePayoutInputSchema, input);
     }
 
     return this.http_client.request<ApiResponse<Payout>>({
@@ -73,8 +74,8 @@ export class PayoutModule {
    * @throws {MonimeApiError} If the API returns an error
    */
   async get(id: string, config?: RequestConfig): Promise<ApiResponse<Payout>> {
-    if (this.http_client.shouldValidate) {
-      validateId(id);
+    if (this.http_client.should_validate) {
+      validate(IdSchema, id);
     }
 
     return this.http_client.request<ApiResponse<Payout>>({
@@ -96,8 +97,8 @@ export class PayoutModule {
     params?: ListPayoutsParams,
     config?: RequestConfig,
   ): Promise<ApiListResponse<Payout>> {
-    if (this.http_client.shouldValidate && params?.limit !== undefined) {
-      validateLimit(params.limit);
+    if (this.http_client.should_validate && params?.limit !== undefined) {
+      validate(LimitSchema, params.limit);
     }
 
     const query_params = params
@@ -134,9 +135,9 @@ export class PayoutModule {
     input: UpdatePayoutInput,
     config?: RequestConfig,
   ): Promise<ApiResponse<Payout>> {
-    if (this.http_client.shouldValidate) {
-      validateId(id);
-      validateUpdatePayoutInput(input);
+    if (this.http_client.should_validate) {
+      validate(IdSchema, id);
+      validate(UpdatePayoutInputSchema, input);
     }
 
     return this.http_client.request<ApiResponse<Payout>>({
@@ -156,8 +157,8 @@ export class PayoutModule {
    * @throws {MonimeApiError} If the API returns an error
    */
   async delete(id: string, config?: RequestConfig): Promise<ApiDeleteResponse> {
-    if (this.http_client.shouldValidate) {
-      validateId(id);
+    if (this.http_client.should_validate) {
+      validate(IdSchema, id);
     }
 
     return this.http_client.request<ApiDeleteResponse>({

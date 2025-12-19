@@ -89,7 +89,10 @@ async function createAccountWithIdempotency(name, idempotencyKey) {
       idempotencyKey,
     );
 
-    console.log(`Account created with idempotency key ${idempotencyKey}:`, account.id);
+    console.log(
+      `Account created with idempotency key ${idempotencyKey}:`,
+      account.id,
+    );
     return account;
   } catch (error) {
     console.error("Failed to create account with idempotency:", error.message);
@@ -301,7 +304,10 @@ async function findAccountByReference(reference) {
     });
 
     if (accounts.length > 0) {
-      console.log(`Found account with reference ${reference}:`, accounts[0].name);
+      console.log(
+        `Found account with reference ${reference}:`,
+        accounts[0].name,
+      );
       return accounts[0];
     } else {
       console.log(`No account found with reference ${reference}`);

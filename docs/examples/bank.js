@@ -316,8 +316,7 @@ async function getProviderDetails(providerId) {
           supported: bank.featureSet.payment.canPayFrom,
           schemes: bank.featureSet.payment.schemes,
         },
-        kycVerification:
-          bank.featureSet.kycVerification.canVerifyAccount,
+        kycVerification: bank.featureSet.kycVerification.canVerifyAccount,
       },
       metadata: {
         created: bank.createTime,
@@ -370,9 +369,7 @@ async function getBanksByScheme(country, scheme) {
     const matchingBanks = response.result.filter((bank) => {
       const payoutSchemes = bank.featureSet.payout.schemes;
       const paymentSchemes = bank.featureSet.payment.schemes;
-      return (
-        payoutSchemes.includes(scheme) || paymentSchemes.includes(scheme)
-      );
+      return payoutSchemes.includes(scheme) || paymentSchemes.includes(scheme);
     });
 
     console.log(`Banks supporting ${scheme} in ${country}:`);

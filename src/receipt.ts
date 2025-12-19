@@ -7,8 +7,9 @@ import type {
   RequestConfig,
 } from "./types";
 import {
-  validateReceiptOrderNumber,
-  validateRedeemReceiptInput,
+  ReceiptOrderNumberSchema,
+  RedeemReceiptInputSchema,
+  validate,
 } from "./validation";
 
 /**
@@ -57,8 +58,8 @@ export class ReceiptModule {
     orderNumber: string,
     config?: RequestConfig,
   ): Promise<ApiResponse<Receipt>> {
-    if (this.http_client.shouldValidate) {
-      validateReceiptOrderNumber(orderNumber);
+    if (this.http_client.should_validate) {
+      validate(ReceiptOrderNumberSchema, orderNumber);
     }
 
     return this.http_client.request<ApiResponse<Receipt>>({
@@ -82,9 +83,9 @@ export class ReceiptModule {
     input: RedeemReceiptInput,
     config?: RequestConfig,
   ): Promise<ApiResponse<RedeemReceiptResult>> {
-    if (this.http_client.shouldValidate) {
-      validateReceiptOrderNumber(orderNumber);
-      validateRedeemReceiptInput(input);
+    if (this.http_client.should_validate) {
+      validate(ReceiptOrderNumberSchema, orderNumber);
+      validate(RedeemReceiptInputSchema, input);
     }
 
     return this.http_client.request<ApiResponse<RedeemReceiptResult>>({

@@ -9,9 +9,10 @@ import type {
   UssdOtp,
 } from "./types";
 import {
-  validateCreateUssdOtpInput,
-  validateLimit,
-  validateId,
+  CreateUssdOtpInputSchema,
+  IdSchema,
+  LimitSchema,
+  validate,
 } from "./validation";
 
 /**
@@ -55,8 +56,8 @@ export class UssdOtpModule {
     input: CreateUssdOtpInput,
     config?: RequestConfig,
   ): Promise<ApiResponse<UssdOtp>> {
-    if (this.http_client.shouldValidate) {
-      validateCreateUssdOtpInput(input);
+    if (this.http_client.should_validate) {
+      validate(CreateUssdOtpInputSchema, input);
     }
 
     return this.http_client.request<ApiResponse<UssdOtp>>({
@@ -76,8 +77,8 @@ export class UssdOtpModule {
    * @throws {MonimeApiError} If the API returns an error
    */
   async get(id: string, config?: RequestConfig): Promise<ApiResponse<UssdOtp>> {
-    if (this.http_client.shouldValidate) {
-      validateId(id);
+    if (this.http_client.should_validate) {
+      validate(IdSchema, id);
     }
 
     return this.http_client.request<ApiResponse<UssdOtp>>({
@@ -99,8 +100,8 @@ export class UssdOtpModule {
     params?: ListUssdOtpsParams,
     config?: RequestConfig,
   ): Promise<ApiListResponse<UssdOtp>> {
-    if (this.http_client.shouldValidate && params?.limit !== undefined) {
-      validateLimit(params.limit);
+    if (this.http_client.should_validate && params?.limit !== undefined) {
+      validate(LimitSchema, params.limit);
     }
 
     const query_params = params
@@ -127,8 +128,8 @@ export class UssdOtpModule {
    * @throws {MonimeApiError} If the API returns an error
    */
   async delete(id: string, config?: RequestConfig): Promise<ApiDeleteResponse> {
-    if (this.http_client.shouldValidate) {
-      validateId(id);
+    if (this.http_client.should_validate) {
+      validate(IdSchema, id);
     }
 
     return this.http_client.request<ApiDeleteResponse>({

@@ -179,9 +179,7 @@ async function scanEventTicket(orderNumber, ticketType, gateId) {
       };
     }
 
-    const ticket = receipt.entitlements?.find(
-      (e) => e.key === ticketType,
-    );
+    const ticket = receipt.entitlements?.find((e) => e.key === ticketType);
 
     if (!ticket) {
       return {
@@ -248,9 +246,7 @@ async function redeemVoucher(orderNumber, voucherKey, posId) {
     const { result: receipt } = await client.receipt.get(orderNumber);
 
     // Check if voucher exists and is available
-    const voucher = receipt.entitlements?.find(
-      (e) => e.key === voucherKey,
-    );
+    const voucher = receipt.entitlements?.find((e) => e.key === voucherKey);
 
     if (!voucher) {
       return {
@@ -396,9 +392,7 @@ async function consumeApiCredit(subscriptionOrderNumber, userId, endpoint) {
       subscriptionOrderNumber,
     );
 
-    const apiCredits = receipt.entitlements?.find(
-      (e) => e.key === "api-calls",
-    );
+    const apiCredits = receipt.entitlements?.find((e) => e.key === "api-calls");
 
     if (!apiCredits) {
       return {
@@ -541,7 +535,9 @@ async function checkEntitlementStatus(orderNumber) {
 
     console.log(`Order: ${receipt.orderNumber}`);
     console.log(`Status: ${receipt.status}`);
-    console.log(`Amount: ${receipt.orderAmount.value} ${receipt.orderAmount.currency}`);
+    console.log(
+      `Amount: ${receipt.orderAmount.value} ${receipt.orderAmount.currency}`,
+    );
 
     if (!receipt.entitlements || receipt.entitlements.length === 0) {
       console.log("No entitlements found");

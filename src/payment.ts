@@ -8,9 +8,10 @@ import type {
   UpdatePaymentInput,
 } from "./types";
 import {
-  validateLimit,
-  validateId,
-  validateUpdatePaymentInput,
+  IdSchema,
+  LimitSchema,
+  UpdatePaymentInputSchema,
+  validate,
 } from "./validation";
 
 /**
@@ -46,8 +47,8 @@ export class PaymentModule {
    * @throws {MonimeApiError} If the API returns an error
    */
   async get(id: string, config?: RequestConfig): Promise<ApiResponse<Payment>> {
-    if (this.http_client.shouldValidate) {
-      validateId(id);
+    if (this.http_client.should_validate) {
+      validate(IdSchema, id);
     }
 
     return this.http_client.request<ApiResponse<Payment>>({
@@ -69,8 +70,8 @@ export class PaymentModule {
     params?: ListPaymentsParams,
     config?: RequestConfig,
   ): Promise<ApiListResponse<Payment>> {
-    if (this.http_client.shouldValidate && params?.limit !== undefined) {
-      validateLimit(params.limit);
+    if (this.http_client.should_validate && params?.limit !== undefined) {
+      validate(LimitSchema, params.limit);
     }
 
     const query_params = params
@@ -105,9 +106,9 @@ export class PaymentModule {
     input: UpdatePaymentInput,
     config?: RequestConfig,
   ): Promise<ApiResponse<Payment>> {
-    if (this.http_client.shouldValidate) {
-      validateId(id);
-      validateUpdatePaymentInput(input);
+    if (this.http_client.should_validate) {
+      validate(IdSchema, id);
+      validate(UpdatePaymentInputSchema, input);
     }
 
     return this.http_client.request<ApiResponse<Payment>>({

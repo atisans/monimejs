@@ -23,9 +23,8 @@ import {
 // ===================================
 
 try {
-  const { result: transaction } = await client.financialTransaction.get(
-    "ftx-transaction-id",
-  );
+  const { result: transaction } =
+    await client.financialTransaction.get("ftx-transaction-id");
 
   console.log(transaction.id); // "ftx-..."
   console.log(transaction.type); // "credit" or "debit"
@@ -138,10 +137,7 @@ try {
   console.log(`Found ${credits.length} credit transactions`);
 
   // Calculate total credits
-  const totalCredits = credits.reduce(
-    (sum, txn) => sum + txn.amount.value,
-    0,
-  );
+  const totalCredits = credits.reduce((sum, txn) => sum + txn.amount.value, 0);
   console.log(`Total credits: ${totalCredits}`);
 } catch (error) {
   console.error("Error fetching credits:", error.message);
@@ -241,10 +237,9 @@ async function reconcileTransactions(externalReferences) {
 
   for (const ref of externalReferences) {
     try {
-      const { result: transactions } =
-        await client.financialTransaction.list({
-          reference: ref,
-        });
+      const { result: transactions } = await client.financialTransaction.list({
+        reference: ref,
+      });
 
       if (transactions.length === 0) {
         unmatched.push(ref);
@@ -326,9 +321,8 @@ if (statement) {
 async function findReversals(accountId = null) {
   try {
     const params = accountId ? { financialAccountId: accountId } : {};
-    const { result: transactions } = await client.financialTransaction.list(
-      params,
-    );
+    const { result: transactions } =
+      await client.financialTransaction.list(params);
 
     const reversals = transactions.filter((txn) => txn.originatingReversal);
 
@@ -339,7 +333,9 @@ async function findReversals(accountId = null) {
         `Reversal ${reversal.id} of ${reversal.originatingReversal.originTxnId}`,
       );
       console.log(`  Amount: ${reversal.amount.value}`);
-      console.log(`  Original ref: ${reversal.originatingReversal.originTxnRef}`);
+      console.log(
+        `  Original ref: ${reversal.originatingReversal.originTxnRef}`,
+      );
     }
 
     return reversals;

@@ -9,9 +9,10 @@ import type {
   RequestConfig,
 } from "./types";
 import {
-  validateId,
-  validateCreateCheckoutSessionInput,
-  validateLimit,
+  CreateCheckoutSessionInputSchema,
+  IdSchema,
+  LimitSchema,
+  validate,
 } from "./validation";
 
 /**
@@ -50,8 +51,8 @@ export class CheckoutSessionModule {
     input: CreateCheckoutSessionInput,
     config?: RequestConfig,
   ): Promise<ApiResponse<CheckoutSession>> {
-    if (this.http_client.shouldValidate) {
-      validateCreateCheckoutSessionInput(input);
+    if (this.http_client.should_validate) {
+      validate(CreateCheckoutSessionInputSchema, input);
     }
 
     return this.http_client.request<ApiResponse<CheckoutSession>>({
@@ -74,8 +75,8 @@ export class CheckoutSessionModule {
     id: string,
     config?: RequestConfig,
   ): Promise<ApiResponse<CheckoutSession>> {
-    if (this.http_client.shouldValidate) {
-      validateId(id);
+    if (this.http_client.should_validate) {
+      validate(IdSchema, id);
     }
 
     return this.http_client.request<ApiResponse<CheckoutSession>>({
@@ -97,8 +98,8 @@ export class CheckoutSessionModule {
     params?: ListCheckoutSessionsParams,
     config?: RequestConfig,
   ): Promise<ApiListResponse<CheckoutSession>> {
-    if (this.http_client.shouldValidate && params?.limit !== undefined) {
-      validateLimit(params.limit);
+    if (this.http_client.should_validate && params?.limit !== undefined) {
+      validate(LimitSchema, params.limit);
     }
 
     const query_params = params
@@ -125,8 +126,8 @@ export class CheckoutSessionModule {
    * @throws {MonimeApiError} If the API returns an error
    */
   async delete(id: string, config?: RequestConfig): Promise<ApiDeleteResponse> {
-    if (this.http_client.shouldValidate) {
-      validateId(id);
+    if (this.http_client.should_validate) {
+      validate(IdSchema, id);
     }
 
     return this.http_client.request<ApiDeleteResponse>({

@@ -10,10 +10,11 @@ import type {
   UpdateInternalTransferInput,
 } from "./types";
 import {
-  validateCreateInternalTransferInput,
-  validateId,
-  validateLimit,
-  validateUpdateInternalTransferInput,
+  CreateInternalTransferInputSchema,
+  IdSchema,
+  LimitSchema,
+  UpdateInternalTransferInputSchema,
+  validate,
 } from "./validation";
 
 /**
@@ -57,8 +58,8 @@ export class InternalTransferModule {
     input: CreateInternalTransferInput,
     config?: RequestConfig,
   ): Promise<ApiResponse<InternalTransfer>> {
-    if (this.http_client.shouldValidate) {
-      validateCreateInternalTransferInput(input);
+    if (this.http_client.should_validate) {
+      validate(CreateInternalTransferInputSchema, input);
     }
 
     return this.http_client.request<ApiResponse<InternalTransfer>>({
@@ -81,8 +82,8 @@ export class InternalTransferModule {
     id: string,
     config?: RequestConfig,
   ): Promise<ApiResponse<InternalTransfer>> {
-    if (this.http_client.shouldValidate) {
-      validateId(id);
+    if (this.http_client.should_validate) {
+      validate(IdSchema, id);
     }
 
     return this.http_client.request<ApiResponse<InternalTransfer>>({
@@ -104,8 +105,8 @@ export class InternalTransferModule {
     params?: ListInternalTransfersParams,
     config?: RequestConfig,
   ): Promise<ApiListResponse<InternalTransfer>> {
-    if (this.http_client.shouldValidate && params?.limit !== undefined) {
-      validateLimit(params.limit);
+    if (this.http_client.should_validate && params?.limit !== undefined) {
+      validate(LimitSchema, params.limit);
     }
 
     const query_params = params
@@ -141,9 +142,9 @@ export class InternalTransferModule {
     input: UpdateInternalTransferInput,
     config?: RequestConfig,
   ): Promise<ApiResponse<InternalTransfer>> {
-    if (this.http_client.shouldValidate) {
-      validateId(id);
-      validateUpdateInternalTransferInput(input);
+    if (this.http_client.should_validate) {
+      validate(IdSchema, id);
+      validate(UpdateInternalTransferInputSchema, input);
     }
 
     return this.http_client.request<ApiResponse<InternalTransfer>>({
@@ -163,8 +164,8 @@ export class InternalTransferModule {
    * @throws {MonimeApiError} If the API returns an error
    */
   async delete(id: string, config?: RequestConfig): Promise<ApiDeleteResponse> {
-    if (this.http_client.shouldValidate) {
-      validateId(id);
+    if (this.http_client.should_validate) {
+      validate(IdSchema, id);
     }
 
     return this.http_client.request<ApiDeleteResponse>({

@@ -65,7 +65,9 @@ async function createRecurrentPaymentCode() {
     console.log("Recurrent payment code created:");
     console.log(`  ID: ${subscription.id}`);
     console.log(`  USSD Code: ${subscription.ussdCode}`);
-    console.log(`  Expected payments: ${subscription.recurrentPaymentTarget.expectedPaymentCount}`);
+    console.log(
+      `  Expected payments: ${subscription.recurrentPaymentTarget.expectedPaymentCount}`,
+    );
 
     return subscription;
   } catch (error) {
@@ -93,7 +95,9 @@ async function createLayawayPlan() {
     });
 
     console.log("Layaway plan created:");
-    console.log(`  Total target: ${layaway.recurrentPaymentTarget.expectedPaymentTotal.value / 100}`);
+    console.log(
+      `  Total target: ${layaway.recurrentPaymentTarget.expectedPaymentTotal.value / 100}`,
+    );
     console.log(`  Per payment: ${layaway.amount.value / 100}`);
     console.log(`  Expires: ${layaway.expireTime}`);
 
@@ -125,7 +129,9 @@ async function createRestrictedPaymentCode() {
     });
 
     console.log("Restricted payment code created:");
-    console.log(`  Authorized providers: ${restricted.authorizedProviders.join(", ")}`);
+    console.log(
+      `  Authorized providers: ${restricted.authorizedProviders.join(", ")}`,
+    );
     console.log(`  Authorized phone: ${restricted.authorizedPhoneNumber}`);
 
     return restricted;
@@ -178,9 +184,14 @@ async function checkPaymentCodeStatus(paymentCodeId) {
     }
 
     // Check recurrent payment progress
-    if (paymentCode.mode === "recurrent" && paymentCode.recurrentPaymentTarget) {
+    if (
+      paymentCode.mode === "recurrent" &&
+      paymentCode.recurrentPaymentTarget
+    ) {
       const target = paymentCode.recurrentPaymentTarget;
-      console.log(`  Progress: ${paymentCode.usageCount}/${target.expectedPaymentCount} payments`);
+      console.log(
+        `  Progress: ${paymentCode.usageCount}/${target.expectedPaymentCount} payments`,
+      );
 
       if (
         target.expectedPaymentCount &&
@@ -264,7 +275,9 @@ async function listRecurrentPaymentCodes() {
     for (const code of recurrentCodes) {
       const target = code.recurrentPaymentTarget;
       console.log(`  ${code.name}:`);
-      console.log(`    Progress: ${code.usageCount}/${target?.expectedPaymentCount || "∞"}`);
+      console.log(
+        `    Progress: ${code.usageCount}/${target?.expectedPaymentCount || "∞"}`,
+      );
     }
 
     return recurrentCodes;
@@ -307,7 +320,9 @@ async function getAllPaymentCodes() {
       });
 
       allCodes.push(...response.result);
-      console.log(`Fetched ${response.result.length} codes (total: ${allCodes.length})`);
+      console.log(
+        `Fetched ${response.result.length} codes (total: ${allCodes.length})`,
+      );
 
       after = response.pagination.next;
     } while (after);

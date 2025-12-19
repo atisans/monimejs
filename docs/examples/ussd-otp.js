@@ -448,7 +448,10 @@ async function twoFactorAuthentication(userId, phoneNumber) {
       return { authenticated: true, otpId: otp.result.id };
     } else {
       console.log("2FA verification failed - access denied");
-      return { authenticated: false, reason: result.expired ? "expired" : "timeout" };
+      return {
+        authenticated: false,
+        reason: result.expired ? "expired" : "timeout",
+      };
     }
   } catch (error) {
     console.error("2FA failed:", error.message);

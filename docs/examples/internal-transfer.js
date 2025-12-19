@@ -411,7 +411,10 @@ async function createEscrow(orderId, buyerId, sellerId, amount) {
     console.log(`Escrow created for order ${orderId}:`, transfer.result.id);
     return transfer.result;
   } catch (error) {
-    console.error(`Escrow creation failed for order ${orderId}:`, error.message);
+    console.error(
+      `Escrow creation failed for order ${orderId}:`,
+      error.message,
+    );
     throw error;
   }
 }
@@ -482,12 +485,7 @@ async function refundEscrow(orderId, buyerId, amount) {
 // BUSINESS UNIT SETTLEMENT
 // ============================================================================
 
-async function settleBetweenBusinessUnits(
-  fromUnit,
-  toUnit,
-  amount,
-  invoiceId,
-) {
+async function settleBetweenBusinessUnits(fromUnit, toUnit, amount, invoiceId) {
   try {
     const transfer = await client.internalTransfer.create({
       amount: {

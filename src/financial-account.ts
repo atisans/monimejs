@@ -10,10 +10,11 @@ import type {
   UpdateFinancialAccountInput,
 } from "./types";
 import {
-  validateCreateFinancialAccountInput,
-  validateId,
-  validateLimit,
-  validateUpdateFinancialAccountInput,
+  CreateFinancialAccountInputSchema,
+  IdSchema,
+  LimitSchema,
+  UpdateFinancialAccountInputSchema,
+  validate,
 } from "./validation";
 
 /**
@@ -58,8 +59,8 @@ export class FinancialAccountModule {
     input: CreateFinancialAccountInput,
     config?: RequestConfig,
   ): Promise<ApiResponse<FinancialAccount>> {
-    if (this.http_client.shouldValidate) {
-      validateCreateFinancialAccountInput(input);
+    if (this.http_client.should_validate) {
+      validate(CreateFinancialAccountInputSchema, input);
     }
 
     return this.http_client.request<ApiResponse<FinancialAccount>>({
@@ -84,8 +85,8 @@ export class FinancialAccountModule {
     params?: GetFinancialAccountParams,
     config?: RequestConfig,
   ): Promise<ApiResponse<FinancialAccount>> {
-    if (this.http_client.shouldValidate) {
-      validateId(id);
+    if (this.http_client.should_validate) {
+      validate(IdSchema, id);
     }
 
     const query_params = params
@@ -114,8 +115,8 @@ export class FinancialAccountModule {
     params?: ListFinancialAccountsParams,
     config?: RequestConfig,
   ): Promise<ApiListResponse<FinancialAccount>> {
-    if (this.http_client.shouldValidate && params?.limit !== undefined) {
-      validateLimit(params.limit);
+    if (this.http_client.should_validate && params?.limit !== undefined) {
+      validate(LimitSchema, params.limit);
     }
 
     const query_params = params
@@ -150,9 +151,9 @@ export class FinancialAccountModule {
     input: UpdateFinancialAccountInput,
     config?: RequestConfig,
   ): Promise<ApiResponse<FinancialAccount>> {
-    if (this.http_client.shouldValidate) {
-      validateId(id);
-      validateUpdateFinancialAccountInput(input);
+    if (this.http_client.should_validate) {
+      validate(IdSchema, id);
+      validate(UpdateFinancialAccountInputSchema, input);
     }
 
     return this.http_client.request<ApiResponse<FinancialAccount>>({

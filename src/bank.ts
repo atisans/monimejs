@@ -7,9 +7,10 @@ import type {
   RequestConfig,
 } from "./types";
 import {
-  validateBankProviderId,
-  validateCountryCode,
-  validateLimit,
+  BankProviderIdSchema,
+  CountryCodeSchema,
+  LimitSchema,
+  validate,
 } from "./validation";
 
 /**
@@ -54,10 +55,10 @@ export class BankModule {
     params: ListBanksParams,
     config?: RequestConfig,
   ): Promise<ApiListResponse<Bank>> {
-    if (this.http_client.shouldValidate) {
-      validateCountryCode(params.country);
+    if (this.http_client.should_validate) {
+      validate(CountryCodeSchema, params.country);
       if (params.limit !== undefined) {
-        validateLimit(params.limit);
+        validate(LimitSchema, params.limit);
       }
     }
 
@@ -87,8 +88,8 @@ export class BankModule {
     providerId: string,
     config?: RequestConfig,
   ): Promise<ApiResponse<Bank>> {
-    if (this.http_client.shouldValidate) {
-      validateBankProviderId(providerId);
+    if (this.http_client.should_validate) {
+      validate(BankProviderIdSchema, providerId);
     }
 
     return this.http_client.request<ApiResponse<Bank>>({

@@ -10,10 +10,11 @@ import type {
   Webhook,
 } from "./types";
 import {
-  validateCreateWebhookInput,
-  validateLimit,
-  validateUpdateWebhookInput,
-  validateId,
+  CreateWebhookInputSchema,
+  IdSchema,
+  LimitSchema,
+  UpdateWebhookInputSchema,
+  validate,
 } from "./validation";
 
 /**
@@ -56,8 +57,8 @@ export class WebhookModule {
     input: CreateWebhookInput,
     config?: RequestConfig,
   ): Promise<ApiResponse<Webhook>> {
-    if (this.http_client.shouldValidate) {
-      validateCreateWebhookInput(input);
+    if (this.http_client.should_validate) {
+      validate(CreateWebhookInputSchema, input);
     }
 
     return this.http_client.request<ApiResponse<Webhook>>({
@@ -77,8 +78,8 @@ export class WebhookModule {
    * @throws {MonimeApiError} If the API returns an error
    */
   async get(id: string, config?: RequestConfig): Promise<ApiResponse<Webhook>> {
-    if (this.http_client.shouldValidate) {
-      validateId(id);
+    if (this.http_client.should_validate) {
+      validate(IdSchema, id);
     }
 
     return this.http_client.request<ApiResponse<Webhook>>({
@@ -100,8 +101,8 @@ export class WebhookModule {
     params?: ListWebhooksParams,
     config?: RequestConfig,
   ): Promise<ApiListResponse<Webhook>> {
-    if (this.http_client.shouldValidate && params?.limit !== undefined) {
-      validateLimit(params.limit);
+    if (this.http_client.should_validate && params?.limit !== undefined) {
+      validate(LimitSchema, params.limit);
     }
 
     const query_params = params
@@ -133,9 +134,9 @@ export class WebhookModule {
     input: UpdateWebhookInput,
     config?: RequestConfig,
   ): Promise<ApiResponse<Webhook>> {
-    if (this.http_client.shouldValidate) {
-      validateId(id);
-      validateUpdateWebhookInput(input);
+    if (this.http_client.should_validate) {
+      validate(IdSchema, id);
+      validate(UpdateWebhookInputSchema, input);
     }
 
     return this.http_client.request<ApiResponse<Webhook>>({
@@ -155,8 +156,8 @@ export class WebhookModule {
    * @throws {MonimeApiError} If the API returns an error
    */
   async delete(id: string, config?: RequestConfig): Promise<ApiDeleteResponse> {
-    if (this.http_client.shouldValidate) {
-      validateId(id);
+    if (this.http_client.should_validate) {
+      validate(IdSchema, id);
     }
 
     return this.http_client.request<ApiDeleteResponse>({

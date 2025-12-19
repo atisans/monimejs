@@ -24,20 +24,26 @@ async function getPaymentDetails(paymentId) {
     console.log("Payment Details:");
     console.log(`  ID: ${payment.id}`);
     console.log(`  Status: ${payment.status}`); // "pending", "completed", "failed"
-    console.log(`  Amount: ${payment.amount.value / 100} ${payment.amount.currency}`);
+    console.log(
+      `  Amount: ${payment.amount.value / 100} ${payment.amount.currency}`,
+    );
     console.log(`  Order: ${payment.orderNumber}`);
     console.log(`  Created: ${payment.createTime}`);
 
     // Check financial transaction reference
     if (payment.financialTransactionReference) {
-      console.log(`  Transaction Ref: ${payment.financialTransactionReference}`);
+      console.log(
+        `  Transaction Ref: ${payment.financialTransactionReference}`,
+      );
     }
 
     // Check fees
     if (payment.fees && payment.fees.length > 0) {
       console.log("  Fees:");
       for (const fee of payment.fees) {
-        console.log(`    ${fee.code}: ${fee.amount.value / 100} ${fee.amount.currency}`);
+        console.log(
+          `    ${fee.code}: ${fee.amount.value / 100} ${fee.amount.currency}`,
+        );
       }
     }
 
@@ -55,7 +61,9 @@ async function verifyPaymentCompletion(paymentId) {
 
     if (payment.status === "completed") {
       console.log("Payment completed successfully!");
-      console.log(`  Amount received: ${payment.amount.value / 100} ${payment.amount.currency}`);
+      console.log(
+        `  Amount received: ${payment.amount.value / 100} ${payment.amount.currency}`,
+      );
       console.log(`  Financial account: ${payment.financialAccountId}`);
 
       return { verified: true, payment };
@@ -115,7 +123,9 @@ async function getPaymentsForOrder(orderNumber) {
     for (const payment of payments) {
       console.log(`  ${payment.id}:`);
       console.log(`    Status: ${payment.status}`);
-      console.log(`    Amount: ${payment.amount.value / 100} ${payment.amount.currency}`);
+      console.log(
+        `    Amount: ${payment.amount.value / 100} ${payment.amount.currency}`,
+      );
       console.log(`    Created: ${payment.createTime}`);
     }
 
@@ -134,7 +144,9 @@ async function getAccountPayments(financialAccountId) {
       limit: 50,
     });
 
-    console.log(`Found ${payments.length} payments for account ${financialAccountId}`);
+    console.log(
+      `Found ${payments.length} payments for account ${financialAccountId}`,
+    );
 
     // Calculate totals
     let completed = 0;
@@ -153,7 +165,9 @@ async function getAccountPayments(financialAccountId) {
     console.log("Summary:");
     console.log(`  Completed: ${completed}`);
     console.log(`  Failed: ${failed}`);
-    console.log(`  Total amount: ${totalAmount / 100} ${payments[0]?.amount.currency || "SLE"}`);
+    console.log(
+      `  Total amount: ${totalAmount / 100} ${payments[0]?.amount.currency || "SLE"}`,
+    );
 
     return payments;
   } catch (error) {
@@ -197,7 +211,9 @@ async function getAllPayments() {
       });
 
       allPayments.push(...response.result);
-      console.log(`Fetched ${response.result.length} payments (total: ${allPayments.length})`);
+      console.log(
+        `Fetched ${response.result.length} payments (total: ${allPayments.length})`,
+      );
 
       after = response.pagination.next;
     } while (after);

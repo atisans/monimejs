@@ -232,7 +232,6 @@ export const CreateInternalTransferInputSchema = v.object({
 // USSD OTP Schemas
 // ============================================================================
 
-
 export const CreateUssdOtpInputSchema = v.object({
   authorizedPhoneNumber: v.pipe(v.string(), v.nonEmpty()),
   verificationMessage: v.optional(v.pipe(v.string(), v.maxLength(255))),

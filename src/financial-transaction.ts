@@ -6,7 +6,7 @@ import type {
   ListFinancialTransactionsParams,
   RequestConfig,
 } from "./types";
-import { validateId, validateLimit } from "./validation";
+import { IdSchema, LimitSchema, validate } from "./validation";
 
 /**
  * Module for viewing financial transactions.
@@ -54,8 +54,8 @@ export class FinancialTransactionModule {
     id: string,
     config?: RequestConfig,
   ): Promise<ApiResponse<FinancialTransaction>> {
-    if (this.http_client.shouldValidate) {
-      validateId(id);
+    if (this.http_client.should_validate) {
+      validate(IdSchema, id);
     }
 
     return this.http_client.request<ApiResponse<FinancialTransaction>>({
@@ -77,8 +77,8 @@ export class FinancialTransactionModule {
     params?: ListFinancialTransactionsParams,
     config?: RequestConfig,
   ): Promise<ApiListResponse<FinancialTransaction>> {
-    if (this.http_client.shouldValidate && params?.limit !== undefined) {
-      validateLimit(params.limit);
+    if (this.http_client.should_validate && params?.limit !== undefined) {
+      validate(LimitSchema, params.limit);
     }
 
     const query_params = params
