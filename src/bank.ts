@@ -34,7 +34,7 @@ import {
  * - Filter banks by supported features
  * - Check operational status before transactions
  *
- * @see {@link https://docs.monime.io/apis/banks} Banks API Documentation
+ * @see {@link https://docs.monime.io/apis/versions/caph-2025-08-23/bank/object} Banks API Documentation
  */
 export class BankModule {
   private http_client: MonimeHttpClient;

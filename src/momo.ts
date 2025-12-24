@@ -40,7 +40,7 @@ import {
  * - Filter providers by supported features
  * - Check operational status before transactions
  *
- * @see {@link https://docs.monime.io/apis/momos} Mobile Money Providers API Documentation
+ * @see {@link https://docs.monime.io/apis/versions/caph-2025-08-23/momo/object} Mobile Money Providers API Documentation
  */
 export class MomoModule {
   private http_client: MonimeHttpClient;

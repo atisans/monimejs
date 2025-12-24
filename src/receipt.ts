@@ -37,7 +37,7 @@ import {
  * - Gift card management
  * - Access control for digital or physical resources
  *
- * @see {@link https://docs.monime.io/apis/receipts} Receipts API Documentation
+ * @see {@link https://docs.monime.io/apis/versions/caph-2025-08-23/receipt/object} Receipts API Documentation
  */
 export class ReceiptModule {
   private http_client: MonimeHttpClient;

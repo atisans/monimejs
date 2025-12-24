@@ -36,7 +36,7 @@ import {
  * - Configurable timeout settings
  * - Enable/disable endpoints without deletion
  *
- * @see {@link https://docs.monime.io/apis/webhooks} Webhooks API Documentation
+ * @see {@link https://docs.monime.io/apis/versions/caph-2025-08-23/webhook/object} Webhooks API Documentation
  */
 export class WebhookModule {
   private http_client: MonimeHttpClient;

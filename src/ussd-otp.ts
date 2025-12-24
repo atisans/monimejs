@@ -35,7 +35,7 @@ import {
  * - Instant verification feedback
  * - Secure proof of phone ownership
  *
- * @see {@link https://docs.monime.io/apis/ussd-otps} USSD OTP API Documentation
+ * @see {@link https://docs.monime.io/apis/versions/caph-2025-08-23/ussd-otp/object} USSD OTP API Documentation
  */
 export class UssdOtpModule {
   private http_client: MonimeHttpClient;

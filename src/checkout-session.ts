@@ -30,7 +30,7 @@ import {
  * - Session expiration controls
  * - Payment method selection (mobile money, bank transfer)
  *
- * @see {@link https://docs.monime.io/apis/checkout-sessions} Checkout Sessions API Documentation
+ * @see {@link https://docs.monime.io/apis/versions/caph-2025-08-23/checkout-session/object} Checkout Sessions API Documentation
  */
 export class CheckoutSessionModule {
   private http_client: MonimeHttpClient;

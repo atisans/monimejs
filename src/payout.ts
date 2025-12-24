@@ -32,7 +32,7 @@ import {
  * - Batch processing support
  * - Transaction reference tracking
  *
- * @see {@link https://docs.monime.io/apis/payouts} Payouts API Documentation
+ * @see {@link https://docs.monime.io/apis/versions/caph-2025-08-23/payout/object} Payouts API Documentation
  */
 export class PayoutModule {
   private http_client: MonimeHttpClient;

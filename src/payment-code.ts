@@ -31,7 +31,7 @@ import {
  * - Set expiration duration
  * - Track payment completion status
  *
- * @see {@link https://docs.monime.io/apis/payment-codes} Payment Codes API Documentation
+ * @see {@link https://docs.monime.io/apis/versions/caph-2025-08-23/payment-code/object} Payment Codes API Documentation
  */
 export class PaymentCodeModule {
   private http_client: MonimeHttpClient;

@@ -29,7 +29,7 @@ import {
  * - Access transaction references for accounting
  * - Update metadata for record keeping
  *
- * @see {@link https://docs.monime.io/apis/payments} Payments API Documentation
+ * @see {@link https://docs.monime.io/apis/versions/caph-2025-08-23/payment/object} Payments API Documentation
  */
 export class PaymentModule {
   private http_client: MonimeHttpClient;

@@ -33,7 +33,7 @@ import { IdSchema, LimitSchema, validate } from "./validation";
  * - Audit financial operations
  * - Build reporting dashboards
  *
- * @see {@link https://docs.monime.io/apis/financial-transactions} Financial Transactions API Documentation
+ * @see {@link https://docs.monime.io/apis/versions/caph-2025-08-23/financial-transaction/object} Financial Transactions API Documentation
  */
 export class FinancialTransactionModule {
   private http_client: MonimeHttpClient;

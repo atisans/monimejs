@@ -38,7 +38,7 @@ import {
  * - Escrow or reserve accounts for holding funds
  * - Multi-tenant systems with account-per-customer architecture
  *
- * @see {@link https://docs.monime.io/apis/financial-accounts} Financial Accounts API Documentation
+ * @see {@link https://docs.monime.io/apis/versions/caph-2025-08-23/financial-account/object} Financial Accounts API Documentation
  */
 export class FinancialAccountModule {
   private http_client: MonimeHttpClient;

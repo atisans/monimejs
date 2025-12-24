@@ -37,7 +37,7 @@ import {
  * - Automatic balance updates
  * - Full audit trail via financial transactions
  *
- * @see {@link https://docs.monime.io/apis/internal-transfers} Internal Transfers API Documentation
+ * @see {@link https://docs.monime.io/apis/versions/caph-2025-08-23/internal-transfer/object} Internal Transfers API Documentation
  */
 export class InternalTransferModule {
   private http_client: MonimeHttpClient;
