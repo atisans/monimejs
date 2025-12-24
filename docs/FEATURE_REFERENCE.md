@@ -8,12 +8,17 @@ Technical details for contributors and those curious about how features are impl
 
 ```
 MonimeClient
+├── bank: BankModule
+├── financialAccount: FinancialAccountModule
+├── financialTransaction: FinancialTransactionModule
 ├── paymentCode: PaymentCodeModule
 ├── payment: PaymentModule
 ├── checkoutSession: CheckoutSessionModule
 ├── payout: PayoutModule
 ├── webhook: WebhookModule
 ├── internalTransfer: InternalTransferModule
+├── momo: MomoModule
+├── receipt: ReceiptModule
 └── ussdOtp: UssdOtpModule
     └── All modules use → MonimeHttpClient
                               ├── Timeout handling
@@ -29,7 +34,7 @@ MonimeClient
 ### Request Flow
 
 ```
-request() → _build_url() → _build_headers() → _execute_with_retry() → _execute_request()
+request() → build_url() → build_headers() → execute_with_retry() → execute_request()
                                                       ↓
                                               Retry loop with backoff
                                                       ↓
@@ -129,7 +134,13 @@ Each resource type has a required prefix:
 
 ```typescript
 if (options.baseUrl !== undefined && !options.baseUrl.startsWith("https://")) {
-  throw new MonimeValidationError("baseUrl must use HTTPS for security", "baseUrl");
+  throw new MonimeValidationError("baseUrl must use HTTPS for security", [
+    {
+      message: "baseUrl must use HTTPS for security",
+      field: "baseUrl",
+      value: options.baseUrl,
+    },
+  ]);
 }
 ```
 
@@ -180,21 +191,20 @@ Each module follows the same pattern:
 
 ```typescript
 export class XxxModule {
-  private _http_client: MonimeHttpClient;
+  private http_client: MonimeHttpClient;
 
-  constructor(httpClient: MonimeHttpClient) {
-    this._http_client = httpClient;
+  constructor(http_client: MonimeHttpClient) {
+    this.http_client = http_client;
   }
 
-  async create(input, idempotencyKey?, config?) {
-    if (this._http_client.shouldValidate) {
-      validateCreateXxxInput(input);
+  async create(input, config?) {
+    if (this.http_client.should_validate) {
+      validate(CreateXxxInputSchema, input);
     }
-    return this._http_client.request({
+    return this.http_client.request({
       method: "POST",
-      path: `/${API_VERSION}/xxx`,
+      path: "/xxx",
       body: input,
-      idempotencyKey,
       config,
     });
   }
@@ -215,6 +225,8 @@ if (method === "POST") {
   headers["Idempotency-Key"] = idempotency_key ?? crypto.randomUUID();
 }
 ```
+
+**Note:** Idempotency keys are auto-generated internally in `http-client.ts` and passed via `RequestConfig.idempotencyKey` from modules.
 
 ---
 
@@ -246,6 +258,7 @@ type RequestConfig = {
   timeout?: number;
   retries?: number;
   signal?: AbortSignal;
+  idempotencyKey?: string;
 };
 ```
 
@@ -259,7 +272,7 @@ type RequestConfig = {
 esbuild src/index.ts \
   --bundle \
   --format=esm \
-  --outdir=dist \
+  --outfile=dist/index.js \
   --target=node20 \
   --minify \
   --tree-shaking=true \
@@ -269,15 +282,15 @@ esbuild src/index.ts \
 - **ESM only** - No CommonJS build
 - **Node 20+** - Required for `AbortSignal.any()`
 - **External valibot** - Not bundled, listed as dependency
-- **Minified** - ~18KB output
+- **Minified** - ~20KB output
 
-### TypeScript
+### TypeScript Declaration Generation
 
 ```bash
-tsc --emitDeclarationOnly
+dts-bundle-generator -o dist/index.d.ts src/index.ts --no-banner
 ```
 
-Generates `.d.ts` files for type hints in consumers.
+Generates bundled `.d.ts` file for type hints in consumers. All types are merged into a single file for distribution.
 
 ---
 
@@ -285,10 +298,49 @@ Generates `.d.ts` files for type hints in consumers.
 
 | Scope | Convention | Example |
 |-------|------------|---------|
-| Public API | camelCase | `paymentCode.create()` |
-| Private members | _snake_case | `_http_client`, `_build_url()` |
+| Public API | camelCase | `paymentCode.create()`, `financialAccount.get()` |
+| Private members | snake_case | `http_client`, `build_url()`, `execute_request()` |
+| Private getters | snake_case | `should_validate` |
 | Constants | UPPER_SNAKE | `API_VERSION`, `DEFAULT_TIMEOUT` |
 | Types | PascalCase | `ClientOptions`, `PaymentCode` |
+| Request methods | UPPER_CASE | `GET`, `POST`, `PATCH`, `DELETE` |
+
+---
+
+## 8. Modules Overview
+
+All modules follow the standard pattern and support CRUD operations where applicable.
+
+| Module | File | Purpose | Operations |
+|--------|------|---------|------------|
+| `bank` | `src/bank.ts` | Retrieve bank provider information | `list(params)`, `get(providerId)` |
+| `financialAccount` | `src/financial-account.ts` | Manage digital wallets/accounts | `create`, `get`, `list`, `update`, `getBalance` |
+| `financialTransaction` | `src/financial-transaction.ts` | View immutable transaction ledger | `get`, `list` (read-only) |
+| `paymentCode` | `src/payment-code.ts` | Create USSD payment links | `create`, `get`, `list`, `update`, `delete` |
+| `payment` | `src/payment.ts` | View payments created by payment codes | `get`, `list`, `update` (read-mostly) |
+| `checkoutSession` | `src/checkout-session.ts` | Hosted payment page sessions | `create`, `get`, `list` |
+| `payout` | `src/payout.ts` | Disburse funds to external accounts | `create`, `get`, `list`, `update`, `delete` |
+| `webhook` | `src/webhook.ts` | Event notification subscriptions | `create`, `get`, `list`, `update`, `delete` |
+| `internalTransfer` | `src/internal-transfer.ts` | Transfer between financial accounts | `create`, `get`, `list`, `update` |
+| `momo` | `src/momo.ts` | Retrieve mobile money provider info | `list(params)`, `get(providerId)` |
+| `receipt` | `src/receipt.ts` | Manage digital receipts with entitlements | `get`, `redeem` |
+| `ussdOtp` | `src/ussd-otp.ts` | USSD-based phone verification | `create`, `get`, `list` |
+
+### Module Constructor Pattern
+
+All modules receive the HTTP client singleton in their constructor:
+
+```typescript
+export class XxxModule {
+  private http_client: MonimeHttpClient;
+  
+  constructor(http_client: MonimeHttpClient) {
+    this.http_client = http_client;
+  }
+}
+```
+
+Modules are instantiated once in `MonimeClient` constructor and reused for the client's lifetime.
 
 ---
 
@@ -298,8 +350,20 @@ Generates `.d.ts` files for type hints in consumers.
 |---------|---------|------|
 | `valibot` | Schema validation | ~10KB |
 
-**Dev only:**
-- `esbuild` - Fast bundler
-- `typescript` - Type checking
-- `@biomejs/biome` - Linting/formatting
-- `@changesets/cli` - Version management
+**Build Output:**
+- `dist/index.js` - Minified bundle | ~20KB
+- `dist/index.d.ts` - Type declarations | Bundled single file
+
+**Dev dependencies:**
+- `esbuild` - Fast bundler for production build
+- `typescript` - TypeScript compiler
+- `dts-bundle-generator` - Bundles .d.ts files
+- `@biomejs/biome` - Code linting/formatting
+- `@changesets/cli` - Changelog and version management
+- `@types/node` - Node.js type definitions
+
+---
+
+## Testing Strategy
+
+See [TESTING_STRATEGY.md](./TESTING_STRATEGY.md) for comprehensive testing guidelines and examples.

@@ -27,14 +27,27 @@ Unofficial lightweight and easy js/ts SDK for interacting with monime's endpoint
 
 ## Features
 
-- [x] **Full API coverage** for Payment Codes and Payments endpoints
+- [x] **Complete API coverage** for 12 resource modules:
+  - [x] Payment Codes
+  - [x] Payments
+  - [x] Financial Accounts
+  - [x] Financial Transactions
+  - [x] Checkout Sessions
+  - [x] Payouts
+  - [x] Webhooks
+  - [x] Internal Transfers
+  - [x] Receipts
+  - [x] Banks
+  - [x] Mobile Money Providers
+  - [x] USSD OTP
 - [x] **Client-based** auth: set credentials once per instance
-- [x] **Predictable** return shape fully typed: `{ success, result, messages }`
-- [x] **Error handling** with typed error classes
+- [x] **Predictable** return shape fully typed: `{ success, result, messages }` and `{ success, messages }` for lists with pagination
+- [x] **Error handling** with typed error classes and validation details
 - [x] **Timeout configuration** with per-request overrides
-- [x] **Retry logic** with exponential backoff
+- [x] **Retry logic** with exponential backoff and Retry-After header support
 - [x] **AbortController support** for request cancellation
-- [x] **Input validation** with clear error messages
+- [x] **Input validation** with detailed field-level error messages
+- [x] **Idempotency** keys auto-generated for POST requests
 
 ---
 
@@ -104,20 +117,21 @@ await client.paymentCode.update("pmc-xxx", { name: "Updated Name" });
 await client.paymentCode.delete("pmc-xxx");
 ```
 
-### Payments
+### Other Modules
 
-```ts
-// Get a payment
-const { result: payment } = await client.payment.get("pay-xxx");
+The SDK includes the following additional modules:
 
-// List payments
-const { result: payments, pagination } = await client.payment.list({
-  limit: 20,
-});
+- **`client.financialTransaction`** - View immutable transaction ledger (`get`, `list`)
+- **`client.internalTransfer`** - Transfer between financial accounts (`create`, `get`, `list`, `update`)
+- **`client.checkoutSession`** - Create and manage hosted payment pages (`create`, `get`, `list`)
+- **`client.payout`** - Disburse funds to external accounts (`create`, `get`, `list`, `update`, `delete`)
+- **`client.webhook`** - Subscribe to payment and transaction events (`create`, `get`, `list`, `update`, `delete`)
+- **`client.receipt`** - Manage digital receipts and entitlements (`get`, `redeem`)
+- **`client.bank`** - List and query bank providers by country (`list`, `get`)
+- **`client.momo`** - List and query mobile money providers (`list`, `get`)
+- **`client.ussdOtp`** - Create USSD-based phone verification sessions (`create`, `get`, `list`)
 
-// Update a payment
-await client.payment.update("pay-xxx", { name: "Updated" });
-```
+For complete type definitions and API details, see [docs/examples](./docs/examples/README.md).
 
 ---
 
@@ -147,7 +161,10 @@ try {
     console.log(error.timeout); // Timeout value in ms
   } else if (error instanceof MonimeValidationError) {
     // Input validation failed
-    console.log(error.field);   // Which field failed
+    console.log(error.issues);  // Array of validation issues
+    error.issues.forEach((issue) => {
+      console.log(`${issue.field}: ${issue.message}`);
+    });
   } else if (error instanceof MonimeNetworkError) {
     // Network error (connection refused, DNS failure, etc.)
     console.log(error.cause);   // Original error
@@ -176,12 +193,15 @@ const client = new MonimeClient({
 
 ```ts
 // Longer timeout for slow operations
-const { result } = await client.paymentCode.list({}, {
+const { result, pagination } = await client.paymentCode.list({
+  status: "pending",
+  limit: 10,
+}, {
   timeout: 60000,
 });
 
 // Disable retries for specific request
-await client.paymentCode.create(input, undefined, {
+await client.paymentCode.create(input, {
   retries: 0,
 });
 ```
@@ -220,27 +240,6 @@ try {
 }
 ```
 
-### Svelte 5 Example
-
-```svelte
-<script>
-  let { id } = $props();
-  let payment = $state(null);
-
-  $effect(() => {
-    const controller = new AbortController();
-
-    client.paymentCode.get(id, { signal: controller.signal })
-      .then(({ result }) => (payment = result))
-      .catch((e) => {
-        if (e.name !== "AbortError") handleError(e);
-      });
-
-    return () => controller.abort(); // Cleanup on unmount or id change
-  });
-</script>
-```
-
 ---
 
 ## Idempotency
@@ -250,7 +249,9 @@ For POST endpoints, the SDK automatically adds an `Idempotency-Key` header. This
 You can provide a custom idempotency key:
 
 ```ts
-await client.paymentCode.create(input, "my-custom-key");
+await client.paymentCode.create(input, {
+  idempotencyKey: "my-custom-key",
+});
 ```
 
 ---
@@ -258,39 +259,6 @@ await client.paymentCode.create(input, "my-custom-key");
 ## Contributing
 
 For detailed contribution guidelines, see [CONTRIBUTING.md](./CONTRIBUTING.md)
-
-### Development Workflow
-
-This project uses **Changesets** for version management and automated publishing:
-
-1. **Make changes** to the codebase
-2. **Add a changeset**: `npm run changeset`
-   - Select version bump type (patch/minor/major)
-   - Describe your changes
-3. **Commit** the changeset file with your code
-4. **PR to main** triggers automated version bump and publishing
-
-### Release Process
-
-- **CI/CD**: GitHub Actions automatically build and test
-- **Publishing**: Changesets create release PRs and publish to npm
-- **Changelog**: Automatically generated from changeset descriptions
-
-### Local Development
-
-```bash
-# Install dependencies
-npm install
-
-# Build the library
-npm run build:clean
-
-# Add a changeset for your changes
-npm run changeset
-
-# Format code
-npm run format
-```
 
 ---
 

@@ -67,7 +67,6 @@ npm run build:types
 | `npm run format` | Format code with Biome |
 | `npm run format:check` | Check formatting without changes |
 | `npm run build:clean` | Clean build (recommended before commits) |
-| `npm run changeset` | Create a changeset for your changes |
 
 ---
 
@@ -75,24 +74,19 @@ npm run build:types
 
 ### TypeScript & Strict Mode
 
-- All code must be **TypeScript** with strict type checking enabled
+- All main source code must be **TypeScript** with strict type checking enabled
+- use snake_case for internal code (any code that the consumer does not use)
 - Use explicit types; avoid `any`
 - Follow the `tsconfig.json` configuration
 - Use `const` and `let`; avoid `var`
 
 ### Formatting
 
-We use **Biome** for formatting and linting. Before committing:
+We use **Biome** for formatting and linting _(Configuration is in `[biome.json](./biome.json)`)_. Before committing:
 
 ```bash
 npm run format
 ```
-
-Configuration is in `biome.json`:
-- **Indentation**: 2 spaces
-- **Quote style**: Double quotes
-- **Auto-organize imports**: Enabled
-- **Linting**: Recommended rules enabled
 
 ### Code Style Guidelines
 
@@ -106,7 +100,7 @@ Configuration is in `biome.json`:
 
 2. **Naming Conventions**:
    - Classes: `PascalCase` (e.g., `MonimeClient`)
-   - Functions/methods: `camelCase` (e.g., `createPayment`)
+   - Functions/methods: `camelCase` (e.g., `createPayment`) internal functions/methods, variables should be snake_case
    - Constants: `UPPER_SNAKE_CASE` (for constants)
    - Types/Interfaces: `PascalCase` (e.g., `PaymentResponse`)
 
@@ -123,7 +117,7 @@ Configuration is in `biome.json`:
 5. **Documentation**:
    - Add JSDoc comments to public methods
    - Include parameter types and return types
-   - Document complex logic with inline comments
+   - Document complex logic with inline comments or make the logic self-explanatory
 
 ---
 
@@ -175,33 +169,6 @@ Use conventional commit format when possible.
 
 ## Submitting Changes
 
-### Create a Changeset (optional)
-
-Before pushing, create a changeset to document your changes:
-
-```bash
-npm run changeset
-```
-
-This interactive CLI will:
-1. Ask which packages changed (select `monimejs`)
-2. Ask the version bump type:
-   - `patch` - Bug fixes
-   - `minor` - New features
-   - `major` - Breaking changes
-3. Ask for a description of your changes
-
-The changeset file is created in `.changeset/` and should be committed with your code.
-
-**Example changeset content**:
-```
----
-"monimejs": minor
----
-
-Add webhook signature verification and retry logic for failed webhooks
-```
-
 ### Push and Create a Pull Request
 
 1. Push your branch:
@@ -245,7 +212,7 @@ Once your PR is merged to `main`:
 
 ### Version Numbers
 
-We follow **Semantic Versioning**:
+We follow **Semantic Versioning** (optional):
 - `MAJOR.MINOR.PATCH` (e.g., `1.2.3`)
 - **MAJOR**: Breaking API changes
 - **MINOR**: New features (backward-compatible)

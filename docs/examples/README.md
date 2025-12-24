@@ -26,17 +26,17 @@ MONIME_ACCESS_TOKEN=your-access-token
 
 | File | Description |
 |------|-------------|
-| [bank.js](./bank.js) | List and retrieve bank providers |
-| [financial-account.js](./financial-account.js) | Create and manage financial accounts |
-| [financial-transaction.js](./financial-transaction.js) | Retrieve and list financial transactions |
-| [momo.js](./momo.js) | List and retrieve mobile money providers |
-| [payment-code.js](./payment-code.js) | Create and manage USSD payment codes |
-| [payment.js](./payment.js) | Retrieve and list payments |
-| [checkout-session.js](./checkout-session.js) | Hosted checkout pages |
-| [payout.js](./payout.js) | Disbursements to mobile money, bank, wallet |
-| [webhook.js](./webhook.js) | Webhook management and signature verification |
-| [internal-transfer.js](./internal-transfer.js) | Transfer funds between accounts |
-| [receipt.js](./receipt.js) | Retrieve and redeem customer entitlements |
-| [ussd-otp.js](./ussd-otp.js) | Phone verification via USSD |
-| [error-handling.js](./error-handling.js) | Handle SDK errors |
-| [request-config.js](./request-config.js) | Timeouts, retries, abort signals |
+| [bank.md](./bank.md) | List and retrieve bank providers |
+| [financial-account.md](./financial-account.md) | Create and manage financial accounts |
+| [financial-transaction.md](./financial-transaction.md) | Retrieve and list financial transactions |
+| [momo.md](./momo.md) | List and retrieve mobile money providers |
+| [payment-code.md](./payment-code.md) | Create and manage USSD payment codes |
+| [payment.md](./payment.md) | Retrieve and list payments |
+| [checkout-session.md](./checkout-session.md) | Hosted checkout pages |
+| [payout.md](./payout.md) | Disbursements to mobile money, bank, wallet |
+| [webhook.md](./webhook.md) | Webhook management and signature verification |
+| [internal-transfer.md](./internal-transfer.md) | Transfer funds between accounts |
+| [receipt.md](./receipt.md) | Retrieve and redeem customer entitlements |
+| [ussd-otp.md](./ussd-otp.md) | Phone verification via USSD |
+| [error-handling.md](./error-handling.md) | Handle SDK errors |
+| [request-config.md](./request-config.md) | Timeouts, retries, abort signals |
