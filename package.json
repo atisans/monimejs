@@ -1,6 +1,6 @@
 {
   "name": "monimejs",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Unofficial lightweight and easy js/ts SDK for interacting with monime's endpoints.",
   "type": "module",
   "engines": {
